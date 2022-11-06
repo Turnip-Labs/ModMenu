@@ -84,9 +84,11 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/fabric_icon.png");
 				} else if (metadata.getId().equals("minecraft")) {
 					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/mc_icon.png");
+				} else if (metadata.getId().equals("java")) {
+					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/java_icon.png");
 				} else {
-					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/grey_fabric_icon.png");
-				}
+                    path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/grey_fabric_icon.png");
+                }
 			}
 			cached = this.list.getCachedModIcon(path);
 			if (cached != null) {

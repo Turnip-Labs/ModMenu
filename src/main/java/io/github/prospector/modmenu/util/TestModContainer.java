@@ -1,6 +1,5 @@
 package io.github.prospector.modmenu.util;
 
-import com.google.gson.JsonElement;
 import net.fabricmc.loader.api.*;
 import net.fabricmc.loader.api.metadata.*;
 
