@@ -4,7 +4,6 @@ import io.github.prospector.modmenu.util.HardcodedUtil;
 import net.fabricmc.loader.api.ModContainer;
 
 import java.util.Comparator;
-
 public class ModMenuConfig {
 	private boolean showLibraries = false;
 	private Sorting sorting = Sorting.ASCENDING;

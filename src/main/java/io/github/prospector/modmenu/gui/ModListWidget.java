@@ -11,13 +11,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.gui.widgets.ScrollableBase;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.util.maths.MathHelper;
+import net.minecraft.src.MathHelper;
+import net.minecraft.src.Tessellator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.image.BufferedImage;
@@ -182,7 +179,7 @@ public class ModListWidget extends AlwaysSelectedEntryListWidget<ModListEntry> i
 	@Override
 	protected void renderList(int x, int y, int mouseX, int mouseY, float delta) {
 		int itemCount = this.getItemCount();
-		Tessellator tessellator_1 = Tessellator.INSTANCE;
+		Tessellator tessellator_1 = Tessellator.instance;
 
 		for (int index = 0; index < itemCount; ++index) {
 			int entryTop = this.getRowTop(index) + 2;
@@ -198,14 +195,14 @@ public class ModListWidget extends AlwaysSelectedEntryListWidget<ModListEntry> i
 					GL11.glDisable(GL11.GL_TEXTURE_2D);
 					float float_2 = this.isFocused() ? 1.0F : 0.5F;
 					GL11.glColor4f(float_2, float_2, float_2, 1f);
-					tessellator_1.start();
+					tessellator_1.startDrawingQuads();
 					tessellator_1.addVertex((double) entryLeft, (double) (entryTop + entryHeight + 2), 0.0D);
 					tessellator_1.addVertex((double) selectionRight, (double) (entryTop + entryHeight + 2), 0.0D);
 					tessellator_1.addVertex((double) selectionRight, (double) (entryTop - 2), 0.0D);
 					tessellator_1.addVertex((double) entryLeft, (double) (entryTop - 2), 0.0D);
 					tessellator_1.draw();
 					GL11.glColor4f(0f, 0f, 0f, 1f);
-					tessellator_1.start();
+					tessellator_1.startDrawingQuads();
 					tessellator_1.addVertex((double) (entryLeft + 1), (double) (entryTop + entryHeight + 1), 0.0D);
 					tessellator_1.addVertex((double) (selectionRight - 1), (double) (entryTop + entryHeight + 1), 0.0D);
 					tessellator_1.addVertex((double) (selectionRight - 1), (double) (entryTop - 1), 0.0D);
@@ -228,29 +225,32 @@ public class ModListWidget extends AlwaysSelectedEntryListWidget<ModListEntry> i
 	}
 
 	@Override
-	public boolean mouseClicked(double double_1, double double_2, int int_1) {
+	public void mouseClicked(int double_1, int double_2, int int_1) {
 		this.updateScrollingState(double_1, double_2, int_1);
-		if (!this.isMouseOver(double_1, double_2)) {
-			return false;
-		} else {
+		if (this.isMouseOver(double_1, double_2))  {
 			ModListEntry entry = this.getEntryAtPos(double_1, double_2);
 			if (entry != null) {
-				if (entry.mouseClicked(double_1, double_2, int_1)) {
-					this.setFocused(entry);
-					this.setDragging(true);
-					return true;
-				}
+                if (entry.list.getFocused() != null) {
+                    if (!entry.list.getFocused().equals(entry)) {
+                        this.setFocused(entry);
+                        this.setSelected(entry);
+                        this.setDragging(true);
+                        super.mouseClicked(double_1, double_2, int_1);
+                    }
+                } else {
+                    this.setFocused(entry);
+                    this.setSelected(entry);
+                    this.setDragging(true);
+                    super.mouseClicked(double_1, double_2, int_1);
+                }
 			} else if (int_1 == 0) {
 				this.clickedHeader((int) (double_1 - (double) (this.left + this.width / 2 - this.getRowWidth() / 2)), (int) (double_2 - (double) this.top) + (int) this.getScrollAmount() - 4);
-				return true;
 			}
-
-			return this.scrolling;
 		}
 	}
 
 	public final ModListEntry getEntryAtPos(double x, double y) {
-		int int_5 = MathHelper.floor(y - (double) this.top) - this.headerHeight + (int) this.getScrollAmount() - 4; // convertToBlockCoord
+		int int_5 = MathHelper.floor_double(y - (double) this.top) - this.headerHeight + (int) this.getScrollAmount() - 4; // convertToBlockCoord
 		int index = int_5 / this.itemHeight;
 		return x < (double) this.getScrollbarPosition() && x >= (double) getRowLeft() && x <= (double) (getRowLeft() + getRowWidth()) && index >= 0 && int_5 >= 0 && index < this.getItemCount() ? this.children().get(index) : null;
 	}

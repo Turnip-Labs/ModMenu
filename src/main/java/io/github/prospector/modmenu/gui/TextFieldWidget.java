@@ -1,10 +1,11 @@
 package io.github.prospector.modmenu.gui;
 
 import io.github.prospector.modmenu.mixin.MinecraftAccessor;
-import net.minecraft.client.EnumOperatingSystems;
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.TextRenderer;
+import net.minecraft.src.EnumOS2;
+import net.minecraft.src.FontRenderer;
+import net.minecraft.src.GuiScreen;
+import net.minecraft.src.Tessellator;
+import net.minecraft.src.helper.TextFieldInputHandler;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -12,8 +13,8 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.function.Predicate;
 
-public class TextFieldWidget extends ScreenBase {
-	private final TextRenderer font;
+public class TextFieldWidget extends GuiScreen {
+	private final FontRenderer font;
 	public int x;
 	public int y;
 	/**
@@ -60,7 +61,7 @@ public class TextFieldWidget extends ScreenBase {
 	 */
 	private Predicate<String> validator = s -> true;
 
-	public TextFieldWidget(TextRenderer font, int x, int y, int width, int height) {
+	public TextFieldWidget(FontRenderer font, int x, int y, int width, int height) {
 		this.font = font;
 		this.x = x;
 		this.y = y;
@@ -302,7 +303,7 @@ public class TextFieldWidget extends ScreenBase {
 			return true;
 		} else if (isKeyComboCtrlV(keyCode)) {
 			if (isEnabled) {
-				writeText(ScreenBase.getClipboardContents());
+				writeText(TextFieldInputHandler.getClipboardString());
 			}
 
 			return true;
@@ -432,8 +433,8 @@ public class TextFieldWidget extends ScreenBase {
 	public void drawTextBox() {
 		if (getVisible()) {
 			if (getEnableBackgroundDrawing()) {
-				fill(x - 1, y - 1, x + width + 1, y + height + 1, 0xffa0a0a0);
-				fill(x, y, x + width, y + height, 0xff000000);
+				drawRect(x - 1, y - 1, x + width + 1, y + height + 1, 0xffa0a0a0);
+				drawRect(x, y, x + width, y + height, 0xff000000);
 			}
 
 			int i = isEnabled ? enabledColor : disabledColor;
@@ -452,8 +453,8 @@ public class TextFieldWidget extends ScreenBase {
 
 			if (!s.isEmpty()) {
 				String s1 = flag ? s.substring(0, j) : s;
-				font.drawTextWithShadow(s1, l, i1, i);
-				j1 += font.getTextWidth(s1) + 1;
+				font.drawStringWithShadow(s1, l, i1, i);
+				j1 += font.getStringWidth(s1) + 1;
 			}
 
 			boolean flag2 = cursorPosition < text.length() || text.length() >= getMaxStringLength();
@@ -467,20 +468,20 @@ public class TextFieldWidget extends ScreenBase {
 			}
 
 			if (!s.isEmpty() && flag && j < s.length()) {
-				font.drawTextWithShadow(s.substring(j), j1, i1, i);
+				font.drawStringWithShadow(s.substring(j), j1, i1, i);
 				//j1 += this.font.getStringWidth(s.substring(j));
 			}
 
 			if (flag1) {
 				if (flag2) {
-					fill(k1, i1 - 1, k1 + 1, i1 + 1 + 9, 0xffd0d0d0);
+					drawRect(k1, i1 - 1, k1 + 1, i1 + 1 + 9, 0xffd0d0d0);
 				} else {
-					font.drawTextWithShadow("_", k1, i1, i);
+					font.drawStringWithShadow("_", k1, i1, i);
 				}
 			}
 
 			if (k != j) {
-				int l1 = l + font.getTextWidth(s.substring(0, k));
+				int l1 = l + font.getStringWidth(s.substring(0, k));
 				drawSelectionBox(k1, i1 - 1, l1 - 1, i1 + 1 + 9);
 			}
 		}
@@ -510,12 +511,12 @@ public class TextFieldWidget extends ScreenBase {
 			startX = x + width;
 		}
 
-		Tessellator tessellator = Tessellator.INSTANCE;
+		Tessellator tessellator = Tessellator.instance;
 		GL11.glColor4f(0f, 0f, 255f, 255f);
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_COLOR_LOGIC_OP);
 		GL11.glLogicOp(GL11.GL_OR_REVERSE);
-		tessellator.start();
+		tessellator.startDrawingQuads();
 		tessellator.addVertex(startX, endY, 0.0D);
 		tessellator.addVertex(endX, endY, 0.0D);
 		tessellator.addVertex(endX, startY, 0.0D);
@@ -683,7 +684,7 @@ public class TextFieldWidget extends ScreenBase {
 	}
 
 	private static boolean isCtrlKeyDown() {
-		if (MinecraftAccessor.getOS() == EnumOperatingSystems.MACOS) {
+		if (MinecraftAccessor.getOS() == EnumOS2.macos) {
 			return Keyboard.isKeyDown(Keyboard.KEY_LMETA) || Keyboard.isKeyDown(Keyboard.KEY_RMETA);
 		} else {
 			return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
@@ -722,15 +723,15 @@ public class TextFieldWidget extends ScreenBase {
 		}
 	}
 
-	private static String trimStringToWidth(TextRenderer font, String text, int maxWidth) {
+	private static String trimStringToWidth(FontRenderer font, String text, int maxWidth) {
 		return trimStringToWidth(font, text, maxWidth, false);
 	}
 
-	private static String trimStringToWidth(TextRenderer font, String text, int maxWidth, boolean reverse) {
+	private static String trimStringToWidth(FontRenderer font, String text, int maxWidth, boolean reverse) {
 		int width = 0;
 		int length;
 		for (length = 0; length < text.length() && width < maxWidth; length++)
-			width += font.getTextWidth(Character.toString(text.charAt(reverse ? text.length() - 1 - length : length)));
+			width += font.getStringWidth(Character.toString(text.charAt(reverse ? text.length() - 1 - length : length)));
 		return reverse ? text.substring(text.length() - length) : text.substring(0, length);
 	}
 

@@ -1,12 +1,12 @@
 package io.github.prospector.modmenu.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.widgets.Button;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.TextRenderer;
+import net.minecraft.src.FontRenderer;
+import net.minecraft.src.GuiButton;
+import net.minecraft.src.Tessellator;
 import org.lwjgl.opengl.GL11;
 
-public class ModMenuTexturedButtonWidget extends Button {
+public class ModMenuTexturedButtonWidget extends GuiButton {
 	private final String texture;
 	private final int u;
 	private final int v;
@@ -31,45 +31,49 @@ public class ModMenuTexturedButtonWidget extends Button {
 	}
 
 	protected void setPos(int x, int y) {
-		this.x = x;
-		this.y = y;
+		this.xPosition = x;
+		this.yPosition = y;
 	}
 
-	protected boolean isHovered(int mouseX, int mouseY) {
-		return mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+	public boolean isHovered(int mouseX, int mouseY) {
+		return mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
 	}
 
-	@Override
+    @Override
+    public void drawButton(Minecraft minecraft, int i, int j) {
+        render(minecraft, i, j);
+    }
+
 	public void render(Minecraft mc, int mouseX, int mouseY) {
 		if (this.visible) {
-			TextRenderer font = mc.textRenderer;
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.textureManager.getTextureId(texture));
+			FontRenderer font = mc.fontRenderer;
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(texture));
 			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			boolean hovered = isHovered(mouseX, mouseY);
 
 			int adjustedV = this.v;
-			if (!active) {
+			if (!enabled) {
 				adjustedV += this.height * 2;
 			} else if (hovered) {
 				adjustedV += this.height;
 			}
 			float uScale = 1f / uWidth;
 			float vScale = 1f / vHeight;
-			Tessellator tess = Tessellator.INSTANCE;
-			tess.start();
-			tess.vertex(x, y + height, this.zOffset, (float) u * uScale, (float)(adjustedV + height) * vScale);
-			tess.vertex(x + width, y + height, this.zOffset, ((float)(u + width) * uScale), (float)(adjustedV + height) * vScale);
-			tess.vertex(x + width, y, this.zOffset, (float)(u + width) * uScale, (float)adjustedV * vScale);
-			tess.vertex(x, y, this.zOffset, (float) u * uScale, (float) adjustedV * vScale);
+			Tessellator tess = Tessellator.instance;
+			tess.startDrawingQuads();
+			tess.addVertexWithUV(xPosition, yPosition + height, this.zLevel, (float) u * uScale, (float)(adjustedV + height) * vScale);
+			tess.addVertexWithUV(xPosition + width, yPosition + height, this.zLevel, ((float)(u + width) * uScale), (float)(adjustedV + height) * vScale);
+			tess.addVertexWithUV(xPosition + width, yPosition, this.zLevel, (float)(u + width) * uScale, (float)adjustedV * vScale);
+			tess.addVertexWithUV(xPosition, yPosition, this.zLevel, (float) u * uScale, (float) adjustedV * vScale);
 			tess.draw();
 
-			this.postRender(mc, mouseX, mouseY);
-			if (!this.active) {
-				this.drawTextWithShadowCentred(font, this.text, this.x + this.width / 2, this.y + (this.height - 8) / 2, 0xffa0a0a0);
+			this.mouseDragged(mc, mouseX, mouseY);
+			if (!this.enabled) {
+				this.drawCenteredString(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffa0a0a0);
 			} else if (hovered) {
-				this.drawTextWithShadowCentred(font, this.text, this.x + this.width / 2, this.y + (this.height - 8) / 2, 0xffffa0);
+				this.drawCenteredString(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffffa0);
 			} else {
-				this.drawTextWithShadowCentred(font, this.text, this.x + this.width / 2, this.y + (this.height - 8) / 2, 0xe0e0e0);
+				this.drawCenteredString(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xe0e0e0);
 			}
 		}
 	}

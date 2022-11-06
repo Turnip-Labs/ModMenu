@@ -1,20 +1,18 @@
-# ModMenu
-~~Hard to be more descriptive than that.~~ It enriches the standard Minecraft menu with an interface displaying a one-dimensional array of modifications
-
-
+# Mod Menu - BTA Port
+~~Hard to be more descriptive than that.~~ It enriches the standard Minecraft menu with an interface displaying a one-dimensional array of modifications
 
 A picture's worth 2 words
 
 ![](https://i.imgur.com/JKEatou.png "Mod Menu")
 
-### Installation on Beta 1.7.3
-1. Download and install [MultiMC](https://multimc.org/#Download) if you haven't already.
-1. If you haven't already, press "create instance", and press "import from zip", and paste the following URL into the text field: https://github.com/calmilamsy/Cursed-Fabric-MultiMC/archive/master.zip
-1. Download ModMenu from the [releases page](https://github.com/calmilamsy/ModMenu/releases).
-1. Click on your new MultiMC instance and click "edit instance" on the right. Click "loader mods" then "add", and navigate to the mod you just downloaded, and press OK.
+### Installation on [Better than Adventure](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/3106066-better-than-adventure-for-beta-1-7-3-timely)
+1. Download and install [Prism Launcher](https://prismlauncher.org/download/) if you haven't already.
+2. Press "create instance", and press "import from zip", and select the instance zip which can be downloaded [here](https://drive.google.com/file/d/1V6nHw_uErtckjTWjfbmX2_qebeTXLbQV/view?usp=sharing).
+3. Download ModMenu from the [releases page](https://github.com/Turnip-Labs/ModMenu/releases).
+4. Click on your new Prism Launcher instance and click "edit instance" on the right. Click "loader mods" then "add", and navigate to the mod you just downloaded, and press OK.
 
 ### Developers:
-- Mod Menu is on maven at: https://maven.fabricmc.net/io/github/prospector/modmenu/ModMenu/
+- You can obtain the latest build via [JitPack](https://jitpack.io/).
 - The icon comes from the icon specified in your fabric.mod.json (as per the spec)
 - Clientside-only and API badges are defined as custom objects in your fabric.mod.json as such:
 ```json

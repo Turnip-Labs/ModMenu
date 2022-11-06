@@ -31,12 +31,37 @@ public class TestModContainer implements ModContainer {
 		return this.metadata;
 	}
 
-	@Override
+    @Override
+    public List<Path> getRootPaths() {
+        return null;
+    }
+
+    @Override
+    public ModOrigin getOrigin() {
+        return null;
+    }
+
+    @Override
+    public Optional<ModContainer> getContainingMod() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Collection<ModContainer> getContainedMods() {
+        return null;
+    }
+
+    @Override
 	public Path getRootPath() {
 		return this.rootPath;
 	}
 
-	private static String randomAlphabetic(int minLen, int maxLen) {
+    @Override
+    public Path getPath(String file) {
+        return null;
+    }
+
+    private static String randomAlphabetic(int minLen, int maxLen) {
 		int len = ThreadLocalRandom.current().nextInt(maxLen - minLen + 1) + minLen;
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < len; i++) {
@@ -105,7 +130,12 @@ public class TestModContainer implements ModContainer {
 			return null;
 		}
 
-		@Override
+        @Override
+        public Collection<ModDependency> getDependencies() {
+            return null;
+        }
+
+        @Override
 		public Collection<ModDependency> getDepends() {
 			return Collections.emptyList();
 		}
@@ -179,5 +209,10 @@ public class TestModContainer implements ModContainer {
 		public Map<String, CustomValue> getCustomValues() {
 			return new HashMap<>();
 		}
-	}
+
+        @Override
+        public boolean containsCustomElement(String key) {
+            return false;
+        }
+    }
 }

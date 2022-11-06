@@ -1,16 +1,15 @@
 package io.github.prospector.modmenu.mixin;
 
-import net.minecraft.client.EnumOperatingSystems;
 import net.minecraft.client.Minecraft;
+import net.minecraft.src.EnumOS2;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(Minecraft.class)
+@Mixin(value = Minecraft.class, remap = false)
 public interface MinecraftAccessor {
-
-	@Invoker("getOperatingSystem")
-	static EnumOperatingSystems getOS() {
-		return EnumOperatingSystems.WINDOWS;
+	@Invoker("getOs")
+	static EnumOS2 getOS() {
+		return EnumOS2.windows;
 	}
 
 }

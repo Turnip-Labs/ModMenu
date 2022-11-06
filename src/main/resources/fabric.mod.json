@@ -17,8 +17,7 @@
     "issues": "https://github.com/Prospector/ModMenu/issues"
   },
   "depends": {
-    "fabricloader": "*",
-    "minecraft": "1.0.0-beta.7.3"
+    "fabricloader": "*"
   },
   "authors": [
     "Prospector"

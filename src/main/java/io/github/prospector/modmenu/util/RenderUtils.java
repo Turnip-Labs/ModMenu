@@ -2,20 +2,20 @@ package io.github.prospector.modmenu.util;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.render.TextRenderer;
+import net.minecraft.src.FontRenderer;
+import net.minecraft.src.GuiScreen;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class RenderUtils extends ScreenBase {
+public class RenderUtils extends GuiScreen {
 
 	public static final RenderUtils INSTANCE = new RenderUtils();
 	private RenderUtils() {}
 
-	public List<String> wrapStringToWidthAsList(TextRenderer font, String text, int width) {
+	public List<String> wrapStringToWidthAsList(FontRenderer font, String text, int width) {
 		List<String> words = new ArrayList<>();
 		if (text != null)
 			Collections.addAll(words, text.split(" "));
@@ -25,7 +25,7 @@ public class RenderUtils extends ScreenBase {
 		while (!words.isEmpty()) {
 			String nextWord = words.remove(0);
 			String next = current.isEmpty() ? nextWord : current + " " + nextWord;
-			if (font.getTextWidth(next) > width) {
+			if (font.getStringWidth(next) > width) {
 				strings.add(current);
 				current = nextWord;
 			} else {
@@ -39,7 +39,7 @@ public class RenderUtils extends ScreenBase {
 		return strings;
 	}
 
-	public void drawWrappedString(TextRenderer font, String string, int x, int y, int wrapWidth, int lines, int color) {
+	public void drawWrappedString(FontRenderer font, String string, int x, int y, int wrapWidth, int lines, int color) {
 		while (string != null && string.endsWith("\n")) {
 			string = string.substring(0, string.length() - 1);
 		}
@@ -54,16 +54,16 @@ public class RenderUtils extends ScreenBase {
 				line += "...";
 			}
 			int x1 = x;
-			font.drawText(line, x1, y + i * 9, color);
+			font.drawString(line, x1, y + i * 9, color);
 		}
 	}
 
-	public void drawBadge(TextRenderer font, int x, int y, int tagWidth, String text, int outlineColor, int fillColor, int textColor) {
-		fill(x + 1, y - 1, x + tagWidth, y, outlineColor);
-		fill(x, y, x + 1, y + 9, outlineColor);
-		fill(x + 1, y + 1 + 9 - 1, x + tagWidth, y + 9 + 1, outlineColor);
-		fill(x + tagWidth, y, x + tagWidth + 1, y + 9, outlineColor);
-		fill(x + 1, y, x + tagWidth, y + 9, fillColor);
-		font.drawText(text, (x + 1 + (tagWidth - font.getTextWidth(text)) / 2), y + 1, textColor);
+	public void drawBadge(FontRenderer font, int x, int y, int tagWidth, String text, int outlineColor, int fillColor, int textColor) {
+		drawRect(x + 1, y - 1, x + tagWidth, y, outlineColor);
+        drawRect(x, y, x + 1, y + 9, outlineColor);
+        drawRect(x + 1, y + 1 + 9 - 1, x + tagWidth, y + 9 + 1, outlineColor);
+        drawRect(x + tagWidth, y, x + tagWidth + 1, y + 9, outlineColor);
+        drawRect(x + 1, y, x + tagWidth, y + 9, fillColor);
+		font.drawString(text, (x + 1 + (tagWidth - font.getStringWidth(text)) / 2), y + 1, textColor);
 	}
 }

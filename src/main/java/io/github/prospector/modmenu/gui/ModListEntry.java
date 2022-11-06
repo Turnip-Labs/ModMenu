@@ -8,8 +8,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.TextRenderer;
+import net.minecraft.src.FontRenderer;
+import net.minecraft.src.Tessellator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
@@ -44,29 +44,14 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 		rowWidth -= getXOffset();
 		GL11.glColor4f(1f, 1f, 1f, 1f);
 		this.bindIconTexture();
-		GL11.glEnable(GL11.GL_BLEND);
-		Tessellator tess = Tessellator.INSTANCE;
-		tess.start();
-		tess.vertex(x, y, 0, 0, 0);
-		tess.vertex(x, y + 32, 0, 0, 1);
-		tess.vertex(x + 32, y + 32, 0, 1, 1);
-		tess.vertex(x + 32, y, 0, 1, 0);
-		tess.draw();
-		GL11.glDisable(GL11.GL_BLEND);
-		String name = HardcodedUtil.formatFabricModuleName(metadata.getName());
+        internalRender(y, x);
+        String name = HardcodedUtil.formatFabricModuleName(metadata.getName());
 		String trimmedName = name;
 		int maxNameWidth = rowWidth - 32 - 3;
-		TextRenderer font = this.client.textRenderer;
-		if (font.getTextWidth(name) > maxNameWidth) {
-			int maxWidth = maxNameWidth - font.getTextWidth("...");
-			trimmedName = "";
-			while (font.getTextWidth(trimmedName) < maxWidth && trimmedName.length() < name.length()) {
-				trimmedName += name.charAt(trimmedName.length());
-			}
-			trimmedName = trimmedName.isEmpty() ? "..." : trimmedName.substring(0, trimmedName.length() - 1) + "...";
-		}
-		font.drawText(trimmedName, x + 32 + 3, y + 1, 0xFFFFFF);
-		new BadgeRenderer(client, x + 32 + 3 + font.getTextWidth(name) + 2, y, x + rowWidth, container, list.getParent()).draw(mouseX, mouseY);
+		FontRenderer font = this.client.fontRenderer;
+        trimmedName = ModListScreen.getString(font, name, trimmedName, maxNameWidth);
+        font.drawString(trimmedName, x + 32 + 3, y + 1, 0xFFFFFF);
+		new BadgeRenderer(client, x + 32 + 3 + font.getStringWidth(name) + 2, y, x + rowWidth, container, list.getParent()).draw(mouseX, mouseY);
 		String description = metadata.getDescription();
 		if (description.isEmpty() && HardcodedUtil.getHardcodedDescriptions().containsKey(metadata.getId())) {
 			description = HardcodedUtil.getHardcodedDescription(metadata.getId());
@@ -74,7 +59,19 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 		RenderUtils.INSTANCE.drawWrappedString(font, description, (x + 32 + 3 + 4), (y + 9 + 2), rowWidth - 32 - 7, 2, 0x808080);
 	}
 
-	private BufferedImage createIcon() {
+    static void internalRender(int y, int x) {
+        GL11.glEnable(GL11.GL_BLEND);
+        Tessellator tess = Tessellator.instance;
+        tess.startDrawingQuads();
+        tess.addVertexWithUV(x, y, 0, 0, 0);
+        tess.addVertexWithUV(x, y + 32, 0, 0, 1);
+        tess.addVertexWithUV(x + 32, y + 32, 0, 1, 1);
+        tess.addVertexWithUV(x + 32, y, 0, 1, 0);
+        tess.draw();
+        GL11.glDisable(GL11.GL_BLEND);
+    }
+
+    private BufferedImage createIcon() {
 		try {
 			Path path = container.getPath(metadata.getIconPath(0).orElse("assets/" + metadata.getId() + "/icon.png"));
 			BufferedImage cached = this.list.getCachedModIcon(path);
@@ -110,9 +107,8 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 	}
 
 	@Override
-	public boolean mouseClicked(double v, double v1, int i) {
+	public void mouseClicked(int v, int v1, int i) {
 		list.select(this);
-		return true;
 	}
 
 	public ModMetadata getMetadata() {
@@ -123,17 +119,17 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 		if (this.iconLocation == null) {
 			BufferedImage icon = this.createIcon();
 			if (icon != null) {
-				this.iconLocation = this.client.textureManager.method_1088(icon);
+				this.iconLocation = this.client.renderEngine.allocateAndSetupTexture(icon);
 			} else {
-				this.iconLocation = this.client.textureManager.getTextureId(UNKNOWN_ICON);
+				this.iconLocation = this.client.renderEngine.getTexture(UNKNOWN_ICON);
 			}
 		}
-		this.client.textureManager.bindTexture(this.iconLocation);
+		this.client.renderEngine.bindTexture(this.iconLocation);
 	}
 
 	public void deleteTexture() {
 		if (iconLocation != null) {
-			this.client.textureManager.method_1085(iconLocation); // func_1078_a
+			this.client.renderEngine.deleteTexture(iconLocation); // func_1078_a
 		}
 	}
 

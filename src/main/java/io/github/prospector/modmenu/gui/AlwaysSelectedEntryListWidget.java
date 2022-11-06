@@ -17,7 +17,7 @@ public abstract class AlwaysSelectedEntryListWidget<E extends EntryListWidget.En
 		super(minecraftClient, i, j, k, l, m);
 	}
 
-	public boolean changeFocus(boolean bl) {
+	public boolean setFocus(boolean bl) {
 		if (!this.inFocus && this.getItemCount() == 0) {
 			return false;
 		} else {

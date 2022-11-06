@@ -20,8 +20,8 @@ public class ChildEntry extends ModListEntry {
 		super.render(index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
 		x += 4;
 		int color = 0xFFA0A0A0;
-		fill(x, y - 2, x + 1, y + (bottomChild ? rowHeight / 2 : rowHeight + 2), color);
-		fill(x, y + rowHeight / 2, x + 7, y + rowHeight / 2 + 1, color);
+        drawRect(x, y - 2, x + 1, y + (bottomChild ? rowHeight / 2 : rowHeight + 2), color);
+        drawRect(x, y + rowHeight / 2, x + 7, y + rowHeight / 2 + 1, color);
 	}
 
 	@Override

@@ -6,7 +6,6 @@
     "MixinGameMenuScreen",
     "MixinTitleScreen",
     "MixinTexturePacks",
-
     "MixinGuiButton",
     "MinecraftAccessor"
   ],
