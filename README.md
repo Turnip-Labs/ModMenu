@@ -1,4 +1,7 @@
 # Mod Menu - BTA Port
+
+[![](https://jitpack.io/v/Turnip-Labs/ModMenu.svg)](https://jitpack.io/#Turnip-Labs/ModMenu)
+
 ~~Hard to be more descriptive than that.~~ It enriches the standard Minecraft menu with an interface displaying a one-dimensional array of modifications
 
 A picture's worth 2 words
