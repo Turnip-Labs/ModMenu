@@ -6,7 +6,7 @@
 
 A picture's worth 2 words
 
-![](https://i.imgur.com/JKEatou.png "Mod Menu")
+![](https://i.imgur.com/BvJYJ1C.png "Mod Menu")
 
 ### Installation on [Better than Adventure](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/3106066-better-than-adventure-for-beta-1-7-3-timely)
 1. Download and install [Prism Launcher](https://prismlauncher.org/download/) if you haven't already.
