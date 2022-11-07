@@ -68,7 +68,11 @@ public class ModMenu implements ClientModInitializer {
 		ModMenuConfigManager.initializeConfig();
 		ImmutableMap.Builder<String, Function<GuiScreen, ? extends GuiScreen>> factories = ImmutableMap.builder();
 		FabricLoader.getInstance().getEntrypoints("modmenu", ModMenuApi.class).forEach(api -> {
-            factories.put(api.getModId(), api.getConfigScreenFactory());
+            try {
+                api.getClass().getDeclaredMethod("getConfigScreenFactory"); // Make sure the method is implemented
+                factories.put(api.getModId(), api.getConfigScreenFactory());
+            } catch (NoSuchMethodException ignored) {
+            }
             api.attachCustomBadges((name, outlineColor, fillColor) -> {
                 Map<String, Map.Entry<Integer, Integer>> map = new HashMap<>();
                 map.put(name, new AbstractMap.SimpleEntry<>(outlineColor, fillColor));
