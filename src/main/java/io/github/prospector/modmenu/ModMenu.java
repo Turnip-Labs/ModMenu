@@ -30,6 +30,7 @@ public class ModMenu implements ClientModInitializer {
 	public static final Set<String> CLIENTSIDE_MODS = new HashSet<>();
     public static final Set<String> DEPRECATED_MODS = new HashSet<>();
 	public static final Set<String> PATCHWORK_FORGE_MODS = new HashSet<>();
+    public static final Map<String, Map<String, Map.Entry<Integer, Integer>>> CUSTOM_BADGE_MODS = new HashMap<>();
 	public static final LinkedListMultimap<ModContainer, ModContainer> PARENT_MAP = LinkedListMultimap.create();
 	private static ImmutableMap<String, Function<GuiScreen, ? extends GuiScreen>> configScreenFactories = ImmutableMap.of();
 	private static int libraryCount = 0;
@@ -66,7 +67,14 @@ public class ModMenu implements ClientModInitializer {
 	public void onInitializeClient() {
 		ModMenuConfigManager.initializeConfig();
 		ImmutableMap.Builder<String, Function<GuiScreen, ? extends GuiScreen>> factories = ImmutableMap.builder();
-		FabricLoader.getInstance().getEntrypoints("modmenu", ModMenuApi.class).forEach(api -> factories.put(api.getModId(), api.getConfigScreenFactory()));
+		FabricLoader.getInstance().getEntrypoints("modmenu", ModMenuApi.class).forEach(api -> {
+            factories.put(api.getModId(), api.getConfigScreenFactory());
+            api.attachCustomBadges((name, outlineColor, fillColor) -> {
+                Map<String, Map.Entry<Integer, Integer>> map = new HashMap<>();
+                map.put(name, new AbstractMap.SimpleEntry<>(outlineColor, fillColor));
+                CUSTOM_BADGE_MODS.put(api.getModId(), map);
+            });
+        });
 		factories.put("minecraft", (screenBase -> new GuiOptions(screenBase, ((Minecraft) FabricLoader.getInstance().getGameInstance()).gameSettings)));
 		configScreenFactories = factories.build();
 		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();

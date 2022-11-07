@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
 
 import java.util.Calendar;
+import java.util.Map;
 
 public class BadgeRenderer {
 	protected int startX, startY, badgeX, badgeY, badgeMax;
@@ -43,6 +44,12 @@ public class BadgeRenderer {
 		if (metadata.getId().equals("minecraft")) {
 			drawBadge("Minecraft", 0x88BCBCBC, 0x88535353, mouseX, mouseY);
 		}
+        if (ModMenu.CUSTOM_BADGE_MODS.containsKey(metadata.getId())) {
+            Map<String, Map.Entry<Integer, Integer>> map = ModMenu.CUSTOM_BADGE_MODS.get(metadata.getId());
+            for (Map.Entry<String, Map.Entry<Integer, Integer>> entry : map.entrySet()) {
+                drawBadge(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue(), mouseX, mouseY);
+            }
+        }
 		//noinspection MagicConstant
 		if (Calendar.getInstance().get(0b10) == 0b11 && Calendar.getInstance().get(0b101) == 0x1) {
 			if (metadata.getId().equals(new String(new byte[]{109, 111, 100, 109, 101, 110, 117}))) {

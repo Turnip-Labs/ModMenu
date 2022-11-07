@@ -4,6 +4,8 @@ import io.github.prospector.modmenu.ModMenu;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import io.github.prospector.modmenu.util.TriConsumer;
 import net.minecraft.src.GuiScreen;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -50,4 +52,13 @@ public interface ModMenuApi {
 	default Function<GuiScreen, ? extends GuiScreen> getConfigScreenFactory() {
 		return screen -> getConfigScreen(screen).map(Supplier::get).orElse(null);
 	}
+
+
+    /**
+     * Add custom badges for mods to use.
+     *
+     * @param consumer the consumer used to add new badges.
+     */
+    default void attachCustomBadges(TriConsumer<String, Integer, Integer> consumer) {
+    }
 }
