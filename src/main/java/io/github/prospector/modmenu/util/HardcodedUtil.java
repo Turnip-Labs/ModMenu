@@ -45,7 +45,7 @@ public class HardcodedUtil {
 		HARDCODED_DESCRIPTIONS.put("fabric-resource-loader-v0", "Asset and data resource loading.");
 		HARDCODED_DESCRIPTIONS.put("fabric-tag-extensions-v0", "Hooks for tags.");
 		HARDCODED_DESCRIPTIONS.put("fabric-textures-v0", "Hooks for texture loading and registration.");
-		HARDCODED_DESCRIPTIONS.put("minecraft", "The base game.");
+		HARDCODED_DESCRIPTIONS.put("minecraft", "The based game.");
 	}
 
 	public static void hardcodeModuleMetadata(ModContainer mod, ModMetadata metadata, String id) {

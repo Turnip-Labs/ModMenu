@@ -15,26 +15,41 @@ A picture's worth 2 words
 4. Click on your new Prism Launcher instance and click "edit instance" on the right. Click "loader mods" then "add", and navigate to the mod you just downloaded, and press OK.
 
 ### Developers:
-- You can obtain the latest build via [JitPack](https://jitpack.io/).
+- You can obtain the latest build via [JitPack](https://jitpack.io/). Add following to your project's `build.gradle`:
+  ```groovy
+  repositories {
+      // ...
+      maven {
+          name = 'JitPack'
+          url = 'https://jitpack.io/'
+      }
+  }
+  
+  dependencies {
+      // ...
+      modImplementation "com.github.Turnip-Labs:ModMenu:<VERSION>"
+  }
+  ```
+  Replace the version with the latest version, which you can find above.
 - The icon comes from the icon specified in your fabric.mod.json (as per the spec)
-- Clientside-only and API badges are defined as custom objects in your fabric.mod.json as such:
+- Clientside-only and API badges are defined as custom objects in your `fabric.mod.json` as such:
 ```json
 "custom": {
     "modmenu:api": true,
     "modmenu:clientsideOnly": true
 }
 ```
-- Mod parenting is used to display a mod as a child of another one. This is meant to be used for mods divided into different modules. The following element in a fabric.mod.json will define the mod as a child of the mod 'flamingo':
+- Mod parenting is used to display a mod as a child of another one. This is meant to be used for mods divided into different modules. The following element in a `fabric.mod.json` will define the mod as a child of the mod 'flamingo':
 ```json
 "custom": {
     "modmenu:parent": "flamingo"
 }
 ```
 - ModMenuAPI
-    - To use the API, implement the ModMenuApi interface on a class and add that as an entry point of type "modmenu" in your fabric.mod.json as such:
+    - To use the API, implement the `ModMenuApi` interface on a class and add that as an entry point of type `modmenu` in your `fabric.mod.json` as such:
   ```json
   "entrypoints": {
-	"modmenu": [ "com.example.mod.ExampleModMenuApiImpl" ]
+  	"modmenu": [ "com.example.mod.ExampleModMenuApiImpl" ]
   }
   ```
     - Features

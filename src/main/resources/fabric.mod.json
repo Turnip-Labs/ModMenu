@@ -12,9 +12,9 @@
     ]
   },
   "contact": {
-    "homepage": "https://minecraft.curseforge.com/projects/modmenu",
-    "sources": "https://github.com/Prospector/ModMenu",
-    "issues": "https://github.com/Prospector/ModMenu/issues"
+    "homepage": "https://github.com/Turnip-Labs/",
+    "sources": "https://github.com/Turnip-Labs/ModMenu",
+    "issues": "https://github.com/Turnip-Labs/ModMenu/issues"
   },
   "depends": {
     "fabricloader": "*"
@@ -45,7 +45,8 @@
     "LeonXu98",
     "magneticflux",
     "Earthcomputer",
-	"Ambos"
+	"Ambos",
+    "pkstDev"
   ],
   "description": "Adds a mod menu to view the list of mods you have installed.",
   "mixins": [

@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(value = GuiButton.class, remap = false)
 public interface MixinGuiButton {
-
 	@Accessor
 	int getWidth();
 
@@ -15,5 +14,4 @@ public interface MixinGuiButton {
 
 	@Accessor
 	void setHeight(int height);
-
 }

@@ -2,11 +2,14 @@ package io.github.prospector.modmenu.gui;
 
 import io.github.prospector.modmenu.util.HardcodedUtil;
 import io.github.prospector.modmenu.util.RenderUtils;
+import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
 import net.minecraft.src.FontRenderer;
 
-public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget.DescriptionEntry> {
+import java.util.Collection;
+import java.util.List;
 
+public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget.DescriptionEntry> {
 	private final ModListScreen parent;
 	private final FontRenderer textRenderer;
 	private ModListEntry lastSelected = null;
@@ -41,6 +44,9 @@ public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget
 			setScrollAmount(-Double.MAX_VALUE);
 			String description = lastSelected.getMetadata().getDescription();
 			String id = lastSelected.getMetadata().getId();
+            Collection<Person> authors = lastSelected.getMetadata().getAuthors();
+            Collection<Person> contributors = lastSelected.getMetadata().getContributors();
+            Collection<String> licenses = lastSelected.getMetadata().getLicense();
 			if (description.isEmpty() && HardcodedUtil.getHardcodedDescriptions().containsKey(id)) {
 				description = HardcodedUtil.getHardcodedDescription(id);
 			}
@@ -49,6 +55,27 @@ public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget
 					children().add(new DescriptionEntry(line));
 				}
 			}
+            if (!authors.isEmpty()) {
+                if (!children().isEmpty()) children().add(new DescriptionEntry(""));
+                children().add(new DescriptionEntry("Authors:"));
+                for (Person person : authors) {
+                    children().add(new DescriptionEntry("    " + person.getName()));
+                }
+            }
+            if (!contributors.isEmpty()) {
+                if (!children().isEmpty()) children().add(new DescriptionEntry(""));
+                children().add(new DescriptionEntry("Contributors:"));
+                for (Person person : contributors) {
+                    children().add(new DescriptionEntry("    " + person.getName()));
+                }
+            }
+            if (!licenses.isEmpty()) {
+                if (!children().isEmpty()) children().add(new DescriptionEntry(""));
+                children().add(new DescriptionEntry("Licenses:"));
+                for (String license : licenses) {
+                    children().add(new DescriptionEntry("    " + license));
+                }
+            }
 		}
 		super.render(mouseX, mouseY, delta);
 	}

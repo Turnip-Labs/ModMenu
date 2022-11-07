@@ -15,6 +15,7 @@ import net.minecraft.src.Tessellator;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
+@SuppressWarnings({"unchecked", "unused"})
 @Environment(EnvType.CLIENT)
 public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extends GuiScreen {
 	protected static final int DRAG_OUTSIDE = -2;

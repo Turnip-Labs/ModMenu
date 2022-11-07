@@ -4,6 +4,7 @@ import io.github.prospector.modmenu.util.HardcodedUtil;
 import net.fabricmc.loader.api.ModContainer;
 
 import java.util.Comparator;
+
 public class ModMenuConfig {
 	private boolean showLibraries = false;
 	private Sorting sorting = Sorting.ASCENDING;
@@ -26,12 +27,12 @@ public class ModMenuConfig {
 		return sorting;
 	}
 
-	public static enum Sorting {
+	public enum Sorting {
 		ASCENDING(Comparator.comparing(modContainer -> HardcodedUtil.formatFabricModuleName(modContainer.getMetadata().getName())), "A-Z"),
 		DECENDING(ASCENDING.getComparator().reversed(), "Z-A");
 
-		Comparator<ModContainer> comparator;
-		String name;
+		final Comparator<ModContainer> comparator;
+		final String name;
 
 		Sorting(Comparator<ModContainer> comparator, String name) {
 			this.comparator = comparator;

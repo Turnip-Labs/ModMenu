@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import net.minecraft.src.GuiScreen;
+import org.jetbrains.annotations.ApiStatus;
 
 public interface ModMenuApi {
 	/**
@@ -31,9 +32,10 @@ public interface ModMenuApi {
 	 * now allows ModMenu to open the screen for you, rather than depending
 	 * on you to open it, and gets rid of the messy Optional->Supplier wrapping.
 	 *
-	 * @deprecated Will be removed in 1.15 snapshots.
+	 * @deprecated For internal use only.
 	 */
 	@Deprecated
+    @ApiStatus.Internal
 	default Optional<Supplier<GuiScreen>> getConfigScreen(GuiScreen screen) {
 		return Optional.empty();
 	}

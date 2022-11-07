@@ -4,20 +4,22 @@ import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.gui.ModListScreen;
 import io.github.prospector.modmenu.gui.ModMenuButtonWidget;
 import net.minecraft.src.GuiButton;
-import net.minecraft.src.GuiIngameMenu;
+import net.minecraft.src.GuiMainMenu;
 import net.minecraft.src.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = GuiIngameMenu.class, remap = false)
-public class MixinGameMenuScreen extends GuiScreen {
-
-	@SuppressWarnings("unchecked")
+@Mixin(value = GuiMainMenu.class, remap = false)
+public class MixinGuiMainMenu extends GuiScreen {
 	@Inject(at = @At("RETURN"), method = "initGui")
 	public void drawMenuButton(CallbackInfo info) {
-		this.controlList.add(new ModMenuButtonWidget(100, this.width / 2 - 100, this.height / 4 + 72 - 16, 200, 20,  "Mods (" + ModMenu.getFormattedModCount() + " loaded)"));
+		GuiButton texturePackButton = this.controlList.get(2);
+		texturePackButton.displayString = "Texture Packs";
+		int newWidth = ((MixinGuiButton) texturePackButton).getWidth() / 2 - 1;
+		((MixinGuiButton) texturePackButton).setWidth(newWidth);
+		this.controlList.add(new ModMenuButtonWidget(100, this.width / 2 + 2, texturePackButton.yPosition, newWidth, 20,  "Mods (" + ModMenu.getFormattedModCount() + " loaded)"));
 	}
 
 	@Inject(method = "actionPerformed", at = @At("HEAD"))
@@ -26,4 +28,5 @@ public class MixinGameMenuScreen extends GuiScreen {
 			mc.displayGuiScreen(new ModListScreen(this));
 		}
 	}
+
 }
