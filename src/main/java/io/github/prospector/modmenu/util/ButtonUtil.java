@@ -1,12 +1,12 @@
-package io.github.prospector.modmenu.gui;
+package io.github.prospector.modmenu.util;
 
-import io.github.prospector.modmenu.mixin.MixinGuiButton;
+import io.github.prospector.modmenu.mixin.GuiButtonAccessor;
 import net.minecraft.src.GuiButton;
 
-public class GuiButtonAccessor {
+public class ButtonUtil {
 	public static GuiButton createButton(int buttonId, int x, int y, int width, int height, String text) {
 		GuiButton button = new GuiButton(buttonId, x, y, text);
-		MixinGuiButton accessor = (MixinGuiButton) button;
+		GuiButtonAccessor accessor = (GuiButtonAccessor) button;
 		accessor.setWidth(width);
 		accessor.setHeight(height);
 		return button;

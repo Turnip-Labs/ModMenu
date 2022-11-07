@@ -32,19 +32,20 @@ A picture's worth 2 words
   ```
   Replace the version with the latest version, which you can find above.
 - The icon comes from the icon specified in your fabric.mod.json (as per the spec)
-- Clientside-only and API badges are defined as custom objects in your `fabric.mod.json` as such:
-```json
-"custom": {
-    "modmenu:api": true,
-    "modmenu:clientsideOnly": true
-}
-```
+- Clientside-only, deprecated and API badges are defined as custom objects in your `fabric.mod.json` as such:
+  ```json
+  "custom": {
+      "modmenu:api": true,
+      "modmenu:deprecated": true,
+      "modmenu:clientsideOnly": true
+  }
+  ```
 - Mod parenting is used to display a mod as a child of another one. This is meant to be used for mods divided into different modules. The following element in a `fabric.mod.json` will define the mod as a child of the mod 'flamingo':
-```json
-"custom": {
-    "modmenu:parent": "flamingo"
-}
-```
+  ```json
+  "custom": {
+      "modmenu:parent": "flamingo"
+  }
+  ```
 - ModMenuAPI
     - To use the API, implement the `ModMenuApi` interface on a class and add that as an entry point of type `modmenu` in your `fabric.mod.json` as such:
   ```json

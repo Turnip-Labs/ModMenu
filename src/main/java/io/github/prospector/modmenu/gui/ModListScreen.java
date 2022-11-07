@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.config.ModMenuConfigManager;
 import io.github.prospector.modmenu.util.BadgeRenderer;
+import io.github.prospector.modmenu.util.ButtonUtil;
 import io.github.prospector.modmenu.util.HardcodedUtil;
 import io.github.prospector.modmenu.util.RenderUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -180,8 +181,8 @@ public class ModListScreen extends GuiScreen {
 		this.controlList.add(configureButton);
 		this.controlList.add(websiteButton);
 		this.controlList.add(issuesButton);
-		this.controlList.add(GuiButtonAccessor.createButton(MODS_FOLDER_BUTTON_ID, this.width / 2 - 154, this.height - 28, 150, 20, "Open Mods Folder"));
-		this.controlList.add(GuiButtonAccessor.createButton(DONE_BUTTON_ID, this.width / 2 + 4, this.height - 28, 150, 20, "Done"));
+		this.controlList.add(ButtonUtil.createButton(MODS_FOLDER_BUTTON_ID, this.width / 2 - 154, this.height - 28, 150, 20, "Open Mods Folder"));
+		this.controlList.add(ButtonUtil.createButton(DONE_BUTTON_ID, this.width / 2 + 4, this.height - 28, 150, 20, "Done"));
 		this.searchBox.setFocused(true);
 
 		init = true;

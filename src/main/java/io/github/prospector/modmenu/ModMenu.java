@@ -28,6 +28,7 @@ public class ModMenu implements ClientModInitializer {
 	private static final Map<String, Runnable> LEGACY_CONFIG_SCREEN_TASKS = new HashMap<>();
 	public static final List<String> LIBRARY_MODS = new ArrayList<>();
 	public static final Set<String> CLIENTSIDE_MODS = new HashSet<>();
+    public static final Set<String> DEPRECATED_MODS = new HashSet<>();
 	public static final Set<String> PATCHWORK_FORGE_MODS = new HashSet<>();
 	public static final LinkedListMultimap<ModContainer, ModContainer> PARENT_MAP = LinkedListMultimap.create();
 	private static ImmutableMap<String, Function<GuiScreen, ? extends GuiScreen>> configScreenFactories = ImmutableMap.of();
@@ -79,6 +80,9 @@ public class ModMenu implements ClientModInitializer {
 			if (metadata.containsCustomValue("modmenu:clientsideOnly") && metadata.getCustomValue("modmenu:clientsideOnly").getAsBoolean()) {
 				CLIENTSIDE_MODS.add(id);
 			}
+            if (metadata.containsCustomValue("modmenu:deprecated") && metadata.getCustomValue("modmenu:deprecated").getAsBoolean()) {
+                DEPRECATED_MODS.add(id);
+            }
 			if (metadata.containsCustomValue("patchwork:source") && metadata.getCustomValue("patchwork:source").getAsObject() != null) {
 				CustomValue.CvObject object = metadata.getCustomValue("patchwork:source").getAsObject();
 				if ("forge".equals(object.get("loader").getAsString())) {

@@ -5,10 +5,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,7 +42,7 @@ public class HardcodedUtil {
 		HARDCODED_DESCRIPTIONS.put("fabric-resource-loader-v0", "Asset and data resource loading.");
 		HARDCODED_DESCRIPTIONS.put("fabric-tag-extensions-v0", "Hooks for tags.");
 		HARDCODED_DESCRIPTIONS.put("fabric-textures-v0", "Hooks for texture loading and registration.");
-		HARDCODED_DESCRIPTIONS.put("minecraft", "The based game.");
+		HARDCODED_DESCRIPTIONS.put("minecraft", new Random().nextInt(1000) == 0 ? "The based game." : "The base game.");
 	}
 
 	public static void hardcodeModuleMetadata(ModContainer mod, ModMetadata metadata, String id) {

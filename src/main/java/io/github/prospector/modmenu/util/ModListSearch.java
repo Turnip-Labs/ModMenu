@@ -37,6 +37,7 @@ public class ModListSearch {
 			|| authorMatches(container, query) //Search via author
 			|| (ModMenu.LIBRARY_MODS.contains(modId) && "api library".contains(query)) //Search for lib mods
 			|| ("clientside".contains(query) && ModMenu.CLIENTSIDE_MODS.contains(modId)) //Search for clientside mods
+            || ("deprecated".contains(query) && ModMenu.DEPRECATED_MODS.contains(modId)) //Search for clientside mods
 			|| ("configurations configs configures configurable".contains(query) && ModMenu.hasConfigScreenFactory(modId)) //Search for mods that can be configured
 		) {
 			return true;

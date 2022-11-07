@@ -11,14 +11,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Random;
+
 @Mixin(value = GuiMainMenu.class, remap = false)
 public class MixinGuiMainMenu extends GuiScreen {
 	@Inject(at = @At("RETURN"), method = "initGui")
 	public void drawMenuButton(CallbackInfo info) {
 		GuiButton texturePackButton = this.controlList.get(2);
-		texturePackButton.displayString = "Texture Packs";
-		int newWidth = ((MixinGuiButton) texturePackButton).getWidth() / 2 - 1;
-		((MixinGuiButton) texturePackButton).setWidth(newWidth);
+		texturePackButton.displayString = new Random().nextInt(1000) == 0 ? "Twin Peaks" : "Texture Packs";
+		int newWidth = ((GuiButtonAccessor) texturePackButton).getWidth() / 2 - 1;
+		((GuiButtonAccessor) texturePackButton).setWidth(newWidth);
 		this.controlList.add(new ModMenuButtonWidget(100, this.width / 2 + 2, texturePackButton.yPosition, newWidth, 20,  "Mods (" + ModMenu.getFormattedModCount() + " loaded)"));
 	}
 

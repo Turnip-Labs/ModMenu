@@ -6,7 +6,7 @@
     "MixinGuiIngameMenu",
     "MixinGuiMainMenu",
     "MixinTexturePacks",
-    "MixinGuiButton",
+    "GuiButtonAccessor",
     "MinecraftAccessor"
   ],
   "injectors": {

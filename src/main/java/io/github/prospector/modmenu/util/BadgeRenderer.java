@@ -34,6 +34,9 @@ public class BadgeRenderer {
 		if (ModMenu.CLIENTSIDE_MODS.contains(metadata.getId())) {
 			drawBadge("Client", 0x884383E3, 0x880E4699, mouseX, mouseY);
 		}
+        if (ModMenu.DEPRECATED_MODS.contains(metadata.getId())) {
+            drawBadge("Deprecated", 0xFF841426, 0xFF530C17, mouseX, mouseY);
+        }
 		if (ModMenu.PATCHWORK_FORGE_MODS.contains(metadata.getId())) {
 			drawBadge("Forge", 0x887C89A3, 0x88202C43, mouseX, mouseY);
 		}

@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = GuiIngameMenu.class, remap = false)
 public class MixinGuiIngameMenu extends GuiScreen {
-
 	@SuppressWarnings("unchecked")
 	@Inject(at = @At("RETURN"), method = "initGui")
 	public void drawMenuButton(CallbackInfo info) {
