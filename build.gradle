@@ -8,8 +8,9 @@ archivesBaseName = project.mod_name
 version = project.mod_version
 
 loom {
-	gluedMinecraftJar()
+	// gluedMinecraftJar()
 	noIntermediateMappings()
+	clientOnlyMinecraftJar()
 	customMinecraftManifest.set("https://github.com/Turnip-Labs/bta-manifest-repo/releases/download/v${project.bta_version}/${project.bta_version}.json")
 }
 

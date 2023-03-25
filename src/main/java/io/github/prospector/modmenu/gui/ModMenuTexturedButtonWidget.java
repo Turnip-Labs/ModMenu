@@ -1,9 +1,9 @@
 package io.github.prospector.modmenu.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.src.FontRenderer;
-import net.minecraft.src.GuiButton;
-import net.minecraft.src.Tessellator;
+import net.minecraft.core.gui.GuiButton;
+import net.minecraft.core.render.FontRenderer;
+import net.minecraft.core.render.Tessellator;
 import org.lwjgl.opengl.GL11;
 
 public class ModMenuTexturedButtonWidget extends GuiButton {
@@ -69,11 +69,11 @@ public class ModMenuTexturedButtonWidget extends GuiButton {
 
 			this.mouseDragged(mc, mouseX, mouseY);
 			if (!this.enabled) {
-				this.drawCenteredString(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffa0a0a0);
+				this.drawStringCentered(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffa0a0a0);
 			} else if (hovered) {
-				this.drawCenteredString(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffffa0);
+				this.drawStringCentered(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffffa0);
 			} else {
-				this.drawCenteredString(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xe0e0e0);
+				this.drawStringCentered(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xe0e0e0);
 			}
 		}
 	}

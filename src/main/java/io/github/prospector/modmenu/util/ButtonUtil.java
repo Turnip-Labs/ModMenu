@@ -1,7 +1,7 @@
 package io.github.prospector.modmenu.util;
 
 import io.github.prospector.modmenu.mixin.GuiButtonAccessor;
-import net.minecraft.src.GuiButton;
+import net.minecraft.core.gui.GuiButton;
 
 public class ButtonUtil {
 	public static GuiButton createButton(int buttonId, int x, int y, int width, int height, String text) {

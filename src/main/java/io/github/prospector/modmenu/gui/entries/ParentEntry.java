@@ -6,8 +6,8 @@ import io.github.prospector.modmenu.gui.ModListWidget;
 import io.github.prospector.modmenu.util.ModListSearch;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.src.FontRenderer;
-import net.minecraft.src.Tessellator;
+import net.minecraft.core.render.FontRenderer;
+import net.minecraft.core.render.Tessellator;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 

@@ -9,9 +9,9 @@ import javax.annotation.Nullable;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.src.GuiScreen;
-import net.minecraft.src.MathHelper;
-import net.minecraft.src.Tessellator;
+import net.minecraft.core.gui.GuiScreen;
+import net.minecraft.core.render.Tessellator;
+import net.minecraft.core.util.helper.MathHelper;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 

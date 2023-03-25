@@ -14,8 +14,8 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.src.GuiOptions;
-import net.minecraft.src.GuiScreen;
+import net.minecraft.core.gui.GuiScreen;
+import net.minecraft.core.gui.options.GuiOptionsPageGeneral;
 
 import java.text.NumberFormat;
 import java.util.*;
@@ -79,7 +79,7 @@ public class ModMenu implements ClientModInitializer {
                 CUSTOM_BADGE_MODS.put(api.getModId(), map);
             });
         });
-		factories.put("minecraft", (screenBase -> new GuiOptions(screenBase, ((Minecraft) FabricLoader.getInstance().getGameInstance()).gameSettings)));
+		factories.put("minecraft", (screenBase -> new GuiOptionsPageGeneral(screenBase, ((Minecraft) FabricLoader.getInstance().getGameInstance()).gameSettings)));
 		configScreenFactories = factories.build();
 		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
 		HardcodedUtil.initializeHardcodings();

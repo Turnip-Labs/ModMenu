@@ -1,11 +1,13 @@
 package io.github.prospector.modmenu.gui;
 
 import io.github.prospector.modmenu.mixin.MinecraftAccessor;
-import net.minecraft.src.EnumOS2;
-import net.minecraft.src.FontRenderer;
-import net.minecraft.src.GuiScreen;
-import net.minecraft.src.Tessellator;
-import net.minecraft.src.helper.TextFieldInputHandler;
+import io.github.prospector.modmenu.mixin.TextFieldEditorAccessor;
+import net.minecraft.core.enums.EnumOS2;
+import net.minecraft.core.gui.GuiScreen;
+import net.minecraft.core.gui.text.ITextField;
+import net.minecraft.core.gui.text.TextFieldEditor;
+import net.minecraft.core.render.FontRenderer;
+import net.minecraft.core.render.Tessellator;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -13,8 +15,9 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.function.Predicate;
 
-public class TextFieldWidget extends GuiScreen {
+public class TextFieldWidget extends GuiScreen implements ITextField {
 	private final FontRenderer font;
+	private final TextFieldEditor handler;
 	public int x;
 	public int y;
 	/**
@@ -67,6 +70,7 @@ public class TextFieldWidget extends GuiScreen {
 		this.y = y;
 		this.width = width;
 		this.height = height;
+		this.handler = new TextFieldEditor(this);
 	}
 
 	/**
@@ -96,6 +100,11 @@ public class TextFieldWidget extends GuiScreen {
 	 */
 	public String getText() {
 		return text;
+	}
+
+	@Override
+	public int maxLength() {
+		return getMaxStringLength();
 	}
 
 	/**
@@ -303,7 +312,7 @@ public class TextFieldWidget extends GuiScreen {
 			return true;
 		} else if (isKeyComboCtrlV(keyCode)) {
 			if (isEnabled) {
-				writeText(TextFieldInputHandler.getClipboardString());
+				writeText(((TextFieldEditorAccessor) handler).getClipboardContentString());
 			}
 
 			return true;

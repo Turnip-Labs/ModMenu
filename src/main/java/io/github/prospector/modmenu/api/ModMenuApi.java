@@ -6,12 +6,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import io.github.prospector.modmenu.util.TriConsumer;
-import net.minecraft.src.GuiScreen;
+import net.minecraft.core.gui.GuiScreen;
 import org.jetbrains.annotations.ApiStatus;
 
 public interface ModMenuApi {
 	/**
-	 * Replaced with {@link ModMenuApi#getConfigScreen(net.minecraft.src.GuiScreen)}, with
+	 * Replaced with {@link ModMenuApi#getConfigScreen(net.minecraft.core.gui.GuiScreen)}, with
 	 * the ModMenuApi implemented onto a class that is added as an
 	 * entry point to your fabric mod metadata.
 	 *

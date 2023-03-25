@@ -3,9 +3,9 @@ package io.github.prospector.modmenu.mixin;
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.gui.ModListScreen;
 import io.github.prospector.modmenu.gui.ModMenuButtonWidget;
-import net.minecraft.src.GuiButton;
-import net.minecraft.src.GuiIngameMenu;
-import net.minecraft.src.GuiScreen;
+import net.minecraft.core.gui.GuiButton;
+import net.minecraft.core.gui.GuiIngameMenu;
+import net.minecraft.core.gui.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,7 +19,7 @@ public class MixinGuiIngameMenu extends GuiScreen {
 		this.controlList.add(new ModMenuButtonWidget(100, this.width / 2 - 100, this.height / 4 + 72 - 16, 200, 20,  "Mods (" + ModMenu.getFormattedModCount() + " loaded)"));
 	}
 
-	@Inject(method = "actionPerformed", at = @At("HEAD"))
+	@Inject(method = "buttonPressed", at = @At("HEAD"))
 	private void onActionPerformed(GuiButton button, CallbackInfo ci) {
 		if (button.id == 100) {
 			mc.displayGuiScreen(new ModListScreen(this));

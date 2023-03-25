@@ -1,6 +1,6 @@
 package io.github.prospector.modmenu.mixin;
 
-import net.minecraft.src.GuiButton;
+import net.minecraft.core.gui.GuiButton;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

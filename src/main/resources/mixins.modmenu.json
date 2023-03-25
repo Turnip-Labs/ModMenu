@@ -7,7 +7,8 @@
     "MixinGuiMainMenu",
     "MixinTexturePacks",
     "GuiButtonAccessor",
-    "MinecraftAccessor"
+    "MinecraftAccessor",
+    "TextFieldEditorAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

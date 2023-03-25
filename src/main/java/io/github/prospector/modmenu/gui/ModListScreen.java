@@ -13,10 +13,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
-import net.minecraft.src.FontRenderer;
-import net.minecraft.src.GuiButton;
-import net.minecraft.src.GuiScreen;
-import net.minecraft.src.Tessellator;
+import net.minecraft.core.gui.GuiButton;
+import net.minecraft.core.gui.GuiScreen;
+import net.minecraft.core.render.FontRenderer;
+import net.minecraft.core.render.Tessellator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.Sys;
@@ -68,10 +68,9 @@ public class ModListScreen extends GuiScreen {
 		this.textTitle = "Mods";
 	}
 
-	@Override
-	public void handleMouseInput() {
-		super.handleMouseInput();
-		int dWheel = Mouse.getEventDWheel()/50;
+	public void handleInput() {
+		super.handleInput();
+		int dWheel = Mouse.getEventDWheel() / 50;
 		if (dWheel != 0) {
 			int mouseX = Mouse.getEventX() * this.width / this.mc.resolution.width; // field_6326_c
 			int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.resolution.height - 1; // field_6325_d
@@ -189,7 +188,7 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	protected void actionPerformed(GuiButton button) {
+	protected void buttonPressed(GuiButton button) {
 		switch (button.id) {
 			case CONFIGURE_BUTTON_ID: {
 				final String modid = Objects.requireNonNull(selected).getMetadata().getId();
@@ -246,7 +245,7 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char char_1, int int_1) {
+	public void keyTyped(char char_1, int int_1, int mouseX, int mouseY) {
 		this.searchBox.textboxKeyTyped(char_1, int_1);
         if (int_1 == 1) {
             this.mc.displayGuiScreen(this.parent);
@@ -295,7 +294,7 @@ public class ModListScreen extends GuiScreen {
 		this.modList.render(mouseX, mouseY, delta);
 		this.searchBox.drawTextBox();
 		GL11.glDisable(GL11.GL_BLEND);
-		this.drawCenteredString(font, this.textTitle, this.modList.getWidth() / 2, 8, 0xffffff);
+		this.drawStringCentered(font, this.textTitle, this.modList.getWidth() / 2, 8, 0xffffff);
 		super.drawScreen(mouseX, mouseY, delta);
 		if (showModCount || !filterOptionsShown) {
 			font.drawString("Showing " + NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()) + " Mods", searchBoxX, 52, 0xFFFFFF);
