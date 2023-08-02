@@ -1,11 +1,12 @@
 package io.github.prospector.modmenu.mixin;
 
+
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.gui.ModListScreen;
 import io.github.prospector.modmenu.gui.ModMenuButtonWidget;
-import net.minecraft.core.gui.GuiButton;
-import net.minecraft.core.gui.GuiIngameMenu;
-import net.minecraft.core.gui.GuiScreen;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiIngameMenu;
+import net.minecraft.client.gui.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

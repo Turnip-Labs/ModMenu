@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.gui;
 
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -13,10 +14,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.gui.GuiButton;
-import net.minecraft.core.gui.GuiScreen;
-import net.minecraft.core.render.FontRenderer;
-import net.minecraft.core.render.Tessellator;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Tessellator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.Sys;
@@ -108,6 +109,7 @@ public class ModListScreen extends GuiScreen {
 		this.descriptionListWidget = new DescriptionListWidget(this.mc, paneWidth, this.height, paneY + 60, this.height - 36, 9 + 1, this);
 		this.descriptionListWidget.setLeftPos(rightPaneX);
 		GuiButton configureButton = new ModMenuTexturedButtonWidget(CONFIGURE_BUTTON_ID, width - 24, paneY, 20, 20, 0, 0, CONFIGURE_BUTTON_LOCATION, 32, 64) {
+
 			@Override
 			public void render(Minecraft mc, int mouseX, int mouseY) {
 				if (selected != null) {

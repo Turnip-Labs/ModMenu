@@ -49,7 +49,8 @@
     "magneticflux",
     "Earthcomputer",
 	"Ambos",
-    "Flamarine"
+    "Flamarine",
+    "sunsetsatellite"
   ],
   "description": "Adds a mod menu to view the list of mods you have installed.",
   "mixins": [

@@ -1,13 +1,14 @@
 package io.github.prospector.modmenu.gui;
 
+
 import io.github.prospector.modmenu.mixin.MinecraftAccessor;
 import io.github.prospector.modmenu.mixin.TextFieldEditorAccessor;
-import net.minecraft.core.enums.EnumOS2;
-import net.minecraft.core.gui.GuiScreen;
-import net.minecraft.core.gui.text.ITextField;
-import net.minecraft.core.gui.text.TextFieldEditor;
-import net.minecraft.core.render.FontRenderer;
-import net.minecraft.core.render.Tessellator;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.text.ITextField;
+import net.minecraft.client.gui.text.TextFieldEditor;
+import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.core.enums.EnumOS;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -693,7 +694,7 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 	}
 
 	private static boolean isCtrlKeyDown() {
-		if (MinecraftAccessor.getOS() == EnumOS2.macos) {
+		if (MinecraftAccessor.getOS() == EnumOS.macos) {
 			return Keyboard.isKeyDown(Keyboard.KEY_LMETA) || Keyboard.isKeyDown(Keyboard.KEY_RMETA);
 		} else {
 			return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);

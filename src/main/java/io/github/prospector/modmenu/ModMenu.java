@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu;
 
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.gson.FieldNamingPolicy;
@@ -14,8 +15,8 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.gui.GuiScreen;
-import net.minecraft.core.gui.options.GuiOptionsPageGeneral;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.options.GuiOptionsPageGeneral;
 
 import java.text.NumberFormat;
 import java.util.*;

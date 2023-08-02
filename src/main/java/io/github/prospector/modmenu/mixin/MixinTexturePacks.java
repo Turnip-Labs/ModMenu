@@ -1,8 +1,9 @@
 package io.github.prospector.modmenu.mixin;
 
+
 import io.github.prospector.modmenu.ModMenu;
-import net.minecraft.core.render.texturepack.TexturePackBase;
-import net.minecraft.core.render.texturepack.TexturePackCustom;
+import net.minecraft.client.render.texturepack.TexturePackBase;
+import net.minecraft.client.render.texturepack.TexturePackCustom;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

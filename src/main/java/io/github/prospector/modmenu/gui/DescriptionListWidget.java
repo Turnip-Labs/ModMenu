@@ -1,10 +1,11 @@
 package io.github.prospector.modmenu.gui;
 
+
 import io.github.prospector.modmenu.util.HardcodedUtil;
 import io.github.prospector.modmenu.util.RenderUtils;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.render.FontRenderer;
+import net.minecraft.client.render.FontRenderer;
 
 import java.util.Collection;
 

@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.gui;
 
+
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.config.ModMenuConfigManager;
 import io.github.prospector.modmenu.gui.entries.ChildEntry;
@@ -11,7 +12,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.render.Tessellator;
+import net.minecraft.client.render.Tessellator;
 import net.minecraft.core.util.helper.MathHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

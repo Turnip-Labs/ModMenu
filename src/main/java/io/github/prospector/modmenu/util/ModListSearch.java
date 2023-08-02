@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.util;
 
+
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.gui.ModListScreen;
 import net.fabricmc.loader.api.ModContainer;

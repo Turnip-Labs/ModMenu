@@ -1,9 +1,10 @@
 package io.github.prospector.modmenu.util;
 
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.core.gui.GuiScreen;
-import net.minecraft.core.render.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.render.FontRenderer;
 
 import java.util.ArrayList;
 import java.util.Collections;

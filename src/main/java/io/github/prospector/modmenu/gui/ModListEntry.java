@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.gui;
 
+
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.util.BadgeRenderer;
 import io.github.prospector.modmenu.util.HardcodedUtil;
@@ -8,8 +9,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.render.FontRenderer;
-import net.minecraft.core.render.Tessellator;
+import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Tessellator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;

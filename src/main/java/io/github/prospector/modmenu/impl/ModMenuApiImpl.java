@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.impl;
 
+
 import io.github.prospector.modmenu.api.ModMenuApi;
 import io.github.prospector.modmenu.util.TriConsumer;
 
