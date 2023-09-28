@@ -6,6 +6,7 @@ import io.github.prospector.modmenu.gui.ModListScreen;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.lang.I18n;
 
 import java.util.Calendar;
 import java.util.Map;
@@ -28,22 +29,23 @@ public class BadgeRenderer {
 	}
 
 	public void draw(int mouseX, int mouseY) {
+		I18n i18n = I18n.getInstance();
 		this.badgeX = startX;
 		this.badgeY = startY;
 		if (ModMenu.LIBRARY_MODS.contains(metadata.getId())) {
-			drawBadge("Library", 0x8810d098, 0x88046146, mouseX, mouseY);
+			drawBadge(i18n.translateKey("modmenu.library"), 0x8810d098, 0x88046146, mouseX, mouseY);
 		}
 		if (ModMenu.CLIENTSIDE_MODS.contains(metadata.getId())) {
-			drawBadge("Client", 0x884383E3, 0x880E4699, mouseX, mouseY);
+			drawBadge(i18n.translateKey("modmenu.clientsideOnly"), 0x884383E3, 0x880E4699, mouseX, mouseY);
 		}
         if (ModMenu.DEPRECATED_MODS.contains(metadata.getId())) {
-            drawBadge("Deprecated", 0xFF841426, 0xFF530C17, mouseX, mouseY);
+            drawBadge(i18n.translateKey("modmenu.deprecated"), 0xFF841426, 0xFF530C17, mouseX, mouseY);
         }
 		if (ModMenu.PATCHWORK_FORGE_MODS.contains(metadata.getId())) {
-			drawBadge("Forge", 0x887C89A3, 0x88202C43, mouseX, mouseY);
+			drawBadge(i18n.translateKey("modmenu.forge"), 0x887C89A3, 0x88202C43, mouseX, mouseY);
 		}
 		if (metadata.getId().equals("minecraft")) {
-			drawBadge("Minecraft", 0x88BCBCBC, 0x88535353, mouseX, mouseY);
+			drawBadge(i18n.translateKey("modmenu.minecraft"), 0x88BCBCBC, 0x88535353, mouseX, mouseY);
 		}
         if (ModMenu.CUSTOM_BADGE_MODS.containsKey(metadata.getId())) {
             Map<String, Map.Entry<Integer, Integer>> map = ModMenu.CUSTOM_BADGE_MODS.get(metadata.getId());

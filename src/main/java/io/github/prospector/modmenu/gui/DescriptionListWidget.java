@@ -6,6 +6,7 @@ import io.github.prospector.modmenu.util.RenderUtils;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.FontRenderer;
+import net.minecraft.core.lang.I18n;
 
 import java.util.Collection;
 
@@ -37,6 +38,7 @@ public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget
 
 	@Override
 	public void render(int mouseX, int mouseY, float delta) {
+		I18n i18n = I18n.getInstance();
 		ModListEntry selectedEntry = parent.getSelectedEntry();
 		if (selectedEntry != lastSelected) {
 			lastSelected = selectedEntry;
@@ -57,21 +59,21 @@ public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget
 			}
             if (!authors.isEmpty()) {
                 if (!children().isEmpty()) children().add(new DescriptionEntry(""));
-                children().add(new DescriptionEntry("Authors:"));
+                children().add(new DescriptionEntry(i18n.translateKey("modmenu.authors")));
                 for (Person person : authors) {
                     children().add(new DescriptionEntry("    " + person.getName()));
                 }
             }
             if (!contributors.isEmpty()) {
                 if (!children().isEmpty()) children().add(new DescriptionEntry(""));
-                children().add(new DescriptionEntry("Contributors:"));
+                children().add(new DescriptionEntry(i18n.translateKey("modmenu.contributors")));
                 for (Person person : contributors) {
                     children().add(new DescriptionEntry("    " + person.getName()));
                 }
             }
             if (!licenses.isEmpty()) {
                 if (!children().isEmpty()) children().add(new DescriptionEntry(""));
-                children().add(new DescriptionEntry("Licenses:"));
+                children().add(new DescriptionEntry(i18n.translateKey("modmenu.licenses")));
                 for (String license : licenses) {
                     children().add(new DescriptionEntry("    " + license));
                 }

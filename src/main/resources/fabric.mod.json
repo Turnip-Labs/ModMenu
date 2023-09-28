@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "modmenu",
   "name": "Mod Menu",
-  "version": "$version",
+  "version": "${version}",
   "environment": "client",
   "license": "MIT",
   "icon": "assets/modmenu/icon.png",
@@ -55,8 +55,5 @@
   "description": "Adds a mod menu to view the list of mods you have installed.",
   "mixins": [
     "mixins.modmenu.json"
-  ],
-  "custom": {
-    "modmenu:clientsideOnly": true
-  }
+  ]
 }

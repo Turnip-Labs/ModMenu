@@ -10,6 +10,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface MinecraftAccessor {
 	@Invoker("getOs")
 	static EnumOS getOS() {
-		return EnumOS.windows;
+		throw new AssertionError("This should never be thrown");
 	}
 }

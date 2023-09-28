@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HardcodedUtil {
+public final class HardcodedUtil {
 	private static final Pattern FABRIC_PATTERN = Pattern.compile("^fabric-.*(-v\\d+)$");
 	private static final Set<String> FABRIC_MODS = new HashSet<>();
 	private static final HashMap<String, String> HARDCODED_DESCRIPTIONS = new HashMap<>();

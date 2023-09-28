@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class ModListSearch {
+public final class ModListSearch {
 
 	public static boolean validSearchQuery(String query) {
 		return query != null && !query.isEmpty();

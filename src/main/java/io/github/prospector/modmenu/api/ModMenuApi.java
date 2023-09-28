@@ -25,9 +25,12 @@ public interface ModMenuApi {
 
 	/**
 	 * Used to determine the owner of this API implementation.
-	 * Will be deprecated and removed once Fabric has support
-	 * for providing ownership information about entry points.
+	 *
+	 * @deprecated This method is deprecated as Fabric Loader
+	 * itself provides provider info for entrypoints.
 	 */
+	@Deprecated
+	@ApiStatus.ScheduledForRemoval(inVersion = "2.1.0")
 	String getModId();
 
 	/**

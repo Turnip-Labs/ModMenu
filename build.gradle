@@ -1,5 +1,5 @@
 plugins {
-	id "org.quiltmc.loom" version "1.+"
+	id "babric-loom" version "1.1.+"
 	id 'java'
 }
 
@@ -8,14 +8,14 @@ archivesBaseName = project.mod_name
 version = project.mod_version
 
 loom {
-	clientOnlyMinecraftJar()
-	//serverOnlyMinecraftJar()
+	gluedMinecraftJar()
 	noIntermediateMappings()
-	customMinecraftManifest.set("https://github.com/MartinSVK12/bta-manifest-repo/releases/download/v${project.bta_version}/${project.bta_version}.json")
+	customMinecraftManifest.set("https://github.com/Turnip-Labs/bta-manifest-repo/releases/download/v${project.bta_version}/${project.bta_version}.json")
 }
 
 repositories {
 	mavenCentral()
+	maven { url = "https://jitpack.io" }
 	maven {
 		name = 'Babric'
 		url = 'https://maven.glass-launcher.net/babric'
@@ -63,15 +63,26 @@ dependencies {
 	mappings loom.layered {}
 
 	modRuntimeOnly "objects:client:43db9b498cb67058d2e12d394e6507722e71bb45" // https://piston-data.mojang.com/v1/objects/43db9b498cb67058d2e12d394e6507722e71bb45/client.jar
-	modImplementation("quilt-loader:quilt-loader:${project.loader_version}")
+	modImplementation "fabric-loader:fabric-loader:${project.loader_version}"
+
+	// Helper library for translations
+	modImplementation "com.github.Turnip-Labs:bta-halplibe:${project.halplibe_version}"
 
 	implementation include("org.apache.commons:commons-lang3:3.12.0")
 
 	implementation include("com.google.guava:guava:28.0-jre")
-	implementation include(group: 'com.google.code.gson', name: 'gson', version: '2.8.6')
+	implementation include("com.google.code.gson:gson:2.8.6")
 
 	modImplementation "org.slf4j:slf4j-api:1.8.0-beta4"
 	modImplementation "org.apache.logging.log4j:log4j-slf4j18-impl:2.16.0"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
 }
 
 java {

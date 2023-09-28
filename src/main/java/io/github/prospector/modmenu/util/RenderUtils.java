@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class RenderUtils extends GuiScreen {
+public final class RenderUtils extends GuiScreen {
 
 	public static final RenderUtils INSTANCE = new RenderUtils();
 	private RenderUtils() {}

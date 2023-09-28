@@ -3,6 +3,7 @@ package io.github.prospector.modmenu.config;
 
 import io.github.prospector.modmenu.util.HardcodedUtil;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.core.lang.I18n;
 
 import java.util.Comparator;
 
@@ -29,15 +30,15 @@ public class ModMenuConfig {
 	}
 
 	public enum Sorting {
-		ASCENDING(Comparator.comparing(modContainer -> HardcodedUtil.formatFabricModuleName(modContainer.getMetadata().getName())), "A-Z"),
-		DECENDING(ASCENDING.getComparator().reversed(), "Z-A");
+		ASCENDING(Comparator.comparing(modContainer -> HardcodedUtil.formatFabricModuleName(modContainer.getMetadata().getName())), "modmenu.sorting.ascending"),
+		DECENDING(ASCENDING.getComparator().reversed(), "modmenu.sorting.decending");
 
 		final Comparator<ModContainer> comparator;
-		final String name;
+		final String key;
 
-		Sorting(Comparator<ModContainer> comparator, String name) {
+		Sorting(Comparator<ModContainer> comparator, String key) {
 			this.comparator = comparator;
-			this.name = name;
+			this.key = key;
 		}
 
 		public Comparator<ModContainer> getComparator() {
@@ -45,7 +46,7 @@ public class ModMenuConfig {
 		}
 
 		public String getName() {
-			return name;
+			return I18n.getInstance().translateKey(key);
 		}
 	}
 }

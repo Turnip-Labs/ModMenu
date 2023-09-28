@@ -10,13 +10,17 @@ import io.github.prospector.modmenu.api.ModMenuApi;
 import io.github.prospector.modmenu.config.ModMenuConfigManager;
 import io.github.prospector.modmenu.util.HardcodedUtil;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
+import net.fabricmc.loader.api.metadata.ModEnvironment;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.options.GuiOptionsPageGeneral;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.NumberFormat;
 import java.util.*;
@@ -24,6 +28,7 @@ import java.util.function.Function;
 
 public class ModMenu implements ClientModInitializer {
 	public static final String MOD_ID = "modmenu";
+	public static final Logger LOGGER = LogManager.getLogger("Mod Menu");
 	public static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting().create();
 
 	private static final Map<String, Runnable> LEGACY_CONFIG_SCREEN_TASKS = new HashMap<>();
@@ -34,7 +39,6 @@ public class ModMenu implements ClientModInitializer {
     public static final Map<String, Map<String, Map.Entry<Integer, Integer>>> CUSTOM_BADGE_MODS = new HashMap<>();
 	public static final LinkedListMultimap<ModContainer, ModContainer> PARENT_MAP = LinkedListMultimap.create();
 	private static ImmutableMap<String, Function<GuiScreen, ? extends GuiScreen>> configScreenFactories = ImmutableMap.of();
-	private static int libraryCount = 0;
 
 	public static boolean hasConfigScreenFactory(String modid) {
 		return configScreenFactories.containsKey(modid);
@@ -64,20 +68,22 @@ public class ModMenu implements ClientModInitializer {
 		LIBRARY_MODS.add(modid);
 	}
 
+	@SuppressWarnings("RedundantCollectionOperation")
 	@Override
 	public void onInitializeClient() {
 		ModMenuConfigManager.initializeConfig();
 		ImmutableMap.Builder<String, Function<GuiScreen, ? extends GuiScreen>> factories = ImmutableMap.builder();
-		FabricLoader.getInstance().getEntrypoints("modmenu", ModMenuApi.class).forEach(api -> {
+		FabricLoader.getInstance().getEntrypointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
+			ModMenuApi api = entrypoint.getEntrypoint();
+			ModContainer mod = entrypoint.getProvider();
             try {
                 api.getClass().getDeclaredMethod("getConfigScreenFactory"); // Make sure the method is implemented
-                factories.put(api.getModId(), api.getConfigScreenFactory());
-            } catch (NoSuchMethodException ignored) {
-            }
+                factories.put(mod.getMetadata().getId(), api.getConfigScreenFactory());
+            } catch (NoSuchMethodException ignored) {}
             api.attachCustomBadges((name, outlineColor, fillColor) -> {
                 Map<String, Map.Entry<Integer, Integer>> map = new HashMap<>();
                 map.put(name, new AbstractMap.SimpleEntry<>(outlineColor, fillColor));
-                CUSTOM_BADGE_MODS.put(api.getModId(), map);
+                CUSTOM_BADGE_MODS.put(mod.getMetadata().getId(), map);
             });
         });
 		factories.put("minecraft", (screenBase -> new GuiOptionsPageGeneral(screenBase, ((Minecraft) FabricLoader.getInstance().getGameInstance()).gameSettings)));
@@ -87,21 +93,34 @@ public class ModMenu implements ClientModInitializer {
 		for (ModContainer mod : mods) {
 			ModMetadata metadata = mod.getMetadata();
 			String id = metadata.getId();
+			// API badges
 			if (metadata.containsCustomValue("modmenu:api") && metadata.getCustomValue("modmenu:api").getAsBoolean()) {
 				addLibraryMod(id);
 			}
-			if (metadata.containsCustomValue("modmenu:clientsideOnly") && metadata.getCustomValue("modmenu:clientsideOnly").getAsBoolean()) {
+
+			// Client side badges
+			if (metadata.getEnvironment().equals(ModEnvironment.CLIENT)) {
 				CLIENTSIDE_MODS.add(id);
 			}
+			if (metadata.containsCustomValue("modmenu:clientsideOnly") && metadata.getCustomValue("modmenu:clientsideOnly").getAsBoolean()) {
+				LOGGER.warn("Found mod with id \"{}\" using deprecated value \"modmenu:clientsideOnly\"!", metadata.getId());
+				if (!(CLIENTSIDE_MODS.contains(id))) CLIENTSIDE_MODS.add(id);
+			}
+
+			// Deprecated badges
             if (metadata.containsCustomValue("modmenu:deprecated") && metadata.getCustomValue("modmenu:deprecated").getAsBoolean()) {
                 DEPRECATED_MODS.add(id);
             }
+
+			// Patchwork (unused)
 			if (metadata.containsCustomValue("patchwork:source") && metadata.getCustomValue("patchwork:source").getAsObject() != null) {
 				CustomValue.CvObject object = metadata.getCustomValue("patchwork:source").getAsObject();
 				if ("forge".equals(object.get("loader").getAsString())) {
 					PATCHWORK_FORGE_MODS.add(id);
 				}
 			}
+
+			// Parent mods
 			if (metadata.containsCustomValue("modmenu:parent")) {
 				String parentId = metadata.getCustomValue("modmenu:parent").getAsString();
 				if (parentId != null) {
@@ -112,7 +131,6 @@ public class ModMenu implements ClientModInitializer {
 				HardcodedUtil.hardcodeModuleMetadata(mod, metadata, id);
 			}
 		}
-		libraryCount = LIBRARY_MODS.size();
 	}
 
 	public static String getFormattedModCount() {

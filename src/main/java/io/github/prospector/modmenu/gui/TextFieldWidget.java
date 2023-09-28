@@ -9,6 +9,7 @@ import net.minecraft.client.gui.text.TextFieldEditor;
 import net.minecraft.client.render.FontRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.core.enums.EnumOS;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -65,13 +66,20 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 	 */
 	private Predicate<String> validator = s -> true;
 
-	public TextFieldWidget(FontRenderer font, int x, int y, int width, int height) {
+	private final @Nullable String emptyText;
+
+	public TextFieldWidget(FontRenderer font, int x, int y, int width, int height, String emptyText) {
 		this.font = font;
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.handler = new TextFieldEditor(this);
+		this.emptyText = emptyText;
+	}
+
+	public TextFieldWidget(FontRenderer font, int x, int y, int width, int height) {
+		this(font, x, y, width, height, null);
 	}
 
 	/**
@@ -465,6 +473,8 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 				String s1 = flag ? s.substring(0, j) : s;
 				font.drawStringWithShadow(s1, l, i1, i);
 				j1 += font.getStringWidth(s1) + 1;
+			} else if (emptyText != null && !this.isFocused) {
+				font.drawStringWithShadow(emptyText, l, i1, 6250335);
 			}
 
 			boolean flag2 = cursorPosition < text.length() || text.length() >= getMaxStringLength();

@@ -2,13 +2,16 @@
   "required": true,
   "package": "io.github.prospector.modmenu.mixin",
   "compatibilityLevel": "JAVA_8",
+  "plugin": "io.github.prospector.modmenu.mixin.ModMenuMixinConfigPlugin",
   "client": [
     "MixinGuiIngameMenu",
     "MixinGuiMainMenu",
     "MixinTexturePacks",
     "GuiButtonAccessor",
     "MinecraftAccessor",
-    "TextFieldEditorAccessor"
+    "LanguageAccessor",
+    "TextFieldEditorAccessor",
+    "MixinI18n"
   ],
   "injectors": {
     "defaultRequire": 1

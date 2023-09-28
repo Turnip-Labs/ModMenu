@@ -1,6 +1,5 @@
 package io.github.prospector.modmenu.gui;
 
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -18,6 +17,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.render.FontRenderer;
 import net.minecraft.client.render.Tessellator;
+import net.minecraft.core.lang.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.Sys;
@@ -66,7 +66,7 @@ public class ModListScreen extends GuiScreen {
 
 	public ModListScreen(GuiScreen previousGui) {
 		this.parent = previousGui;
-		this.textTitle = "Mods";
+		this.textTitle = I18n.getInstance().translateKey("modmenu.title");
 	}
 
 	public void handleInput() {
@@ -93,6 +93,7 @@ public class ModListScreen extends GuiScreen {
 
 	@Override
 	public void initGui() {
+		I18n i18n = I18n.getInstance();
 		Keyboard.enableRepeatEvents(true);
 		FontRenderer font = fontRenderer;
 		paneY = 48;
@@ -102,7 +103,7 @@ public class ModListScreen extends GuiScreen {
 		int searchBoxWidth = paneWidth - 32 - 22;
 		searchBoxX = paneWidth / 2 - searchBoxWidth / 2 - 22 / 2;
 		String oldText = this.searchBox == null ? "" : this.searchBox.getText();
-		this.searchBox = new TextFieldWidget(this.fontRenderer, searchBoxX, 22, searchBoxWidth, 20); // field_6451_g
+		this.searchBox = new TextFieldWidget(this.fontRenderer, searchBoxX, 22, searchBoxWidth, 20, i18n.translateKey("modmenu.search")); // field_6451_g
 		this.searchBox.setText(oldText);
 		this.modList = new ModListWidget(this.mc, paneWidth, this.height, paneY + 19, this.height - 36, 36, this.searchBox.getText(), this.modList, this);
 		this.modList.setLeftPos(0);
@@ -125,7 +126,7 @@ public class ModListScreen extends GuiScreen {
 		};
 		int urlButtonWidths = paneWidth / 2 - 2;
 		int cappedButtonWidth = Math.min(urlButtonWidths, 200);
-		GuiButton websiteButton = new GuiButton(WEBSITE_BUTTON_ID, rightPaneX + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, "Website") {
+		GuiButton websiteButton = new GuiButton(WEBSITE_BUTTON_ID, rightPaneX + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, i18n.translateKey("modmenu.website")) {
 			@Override
 			public void drawButton(Minecraft mc, int var1, int var2) {
 				visible = selected != null; // visible = selected != null
@@ -133,7 +134,7 @@ public class ModListScreen extends GuiScreen {
 				super.drawButton(mc, var1, var2);
 			}
 		};
-		GuiButton issuesButton = new GuiButton(ISSUES_BUTTON_ID, rightPaneX + urlButtonWidths + 4 + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, "Issues") {
+		GuiButton issuesButton = new GuiButton(ISSUES_BUTTON_ID, rightPaneX + urlButtonWidths + 4 + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, i18n.translateKey("modmenu.issues")) {
 			@Override
 			public void drawButton(Minecraft mc, int var1, int var2) {
 				visible = selected != null; // visible = selected != null
@@ -146,17 +147,17 @@ public class ModListScreen extends GuiScreen {
 			public void render(Minecraft mc, int int_1, int int_2) {
 				super.render(mc, int_1, int_2);
 				if (isHovered(int_1, int_2)) {
-					setTooltip("Toggle Filter Options");
+					setTooltip(i18n.translateKey("modmenu.toggleFilterOptions"));
 				}
 			}
 		});
-		String showLibrariesText = ModMenuConfigManager.getConfig().showLibraries() ? "Libraries: Shown" : "Libraries: Hidden";
-		String sortingText = "Sort: " + ModMenuConfigManager.getConfig().getSorting().getName();
+		String showLibrariesText = i18n.translateKeyAndFormat("modmenu.showLibraries", i18n.translateKey("modmenu.showLibraries." + ModMenuConfigManager.getConfig().showLibraries()));
+		String sortingText = i18n.translateKeyAndFormat("modmenu.sorting", ModMenuConfigManager.getConfig().getSorting().getName());
 		int showLibrariesWidth = font.getStringWidth(showLibrariesText) + 20;
 		int sortingWidth = font.getStringWidth(sortingText) + 20;
 		int filtersX;
 		int filtersWidth = showLibrariesWidth + sortingWidth + 2;
-		if ((filtersWidth + font.getStringWidth("Showing " + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()) + " Mods") + 20) >= searchBoxX + searchBoxWidth + 22) {
+		if ((filtersWidth + font.getStringWidth(i18n.translateKeyAndFormat("modmenu.showingMods", NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()))) + 20) >= searchBoxX + searchBoxWidth + 22) {
 			filtersX = paneWidth / 2 - filtersWidth / 2;
 			showModCount = false;
 		} else {
@@ -167,7 +168,7 @@ public class ModListScreen extends GuiScreen {
 			@Override
 			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
 				visible = enabled = filterOptionsShown;
-				this.displayString = "Sort: " + ModMenuConfigManager.getConfig().getSorting().getName();
+				this.displayString = i18n.translateKeyAndFormat("modmenu.sorting", ModMenuConfigManager.getConfig().getSorting().getName());
 				super.drawButton(mc, mouseX, mouseY);
 			}
 		});
@@ -175,7 +176,7 @@ public class ModListScreen extends GuiScreen {
 			@Override
 			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
 				visible = enabled = filterOptionsShown;
-				this.displayString = ModMenuConfigManager.getConfig().showLibraries() ? "Libraries: Shown" : "Libraries: Hidden";
+				this.displayString = i18n.translateKeyAndFormat("modmenu.showLibraries", i18n.translateKey("modmenu.showLibraries." + ModMenuConfigManager.getConfig().showLibraries()));
 				super.drawButton(mc, mouseX, mouseY);
 			}
 		});
@@ -227,7 +228,7 @@ public class ModListScreen extends GuiScreen {
 				break;
 			}
 			case MODS_FOLDER_BUTTON_ID: {
-				File modsFolder = new File(FabricLoader.getInstance().getGameDirectory(), "mods");
+				File modsFolder = new File(FabricLoader.getInstance().getGameDir().toFile(), "mods");
 				try {
 					Sys.openURL(modsFolder.toURI().toURL().toString());
 				} catch (MalformedURLException e) {
@@ -274,6 +275,7 @@ public class ModListScreen extends GuiScreen {
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float delta) {
+		I18n i18n = I18n.getInstance();
 		int mouseDX = Mouse.getEventDX() * this.width / this.mc.resolution.width; // field_6326_c
 		int mouseDY = this.height - Mouse.getEventDY() * this.height / this.mc.resolution.height - 1; // field_6325_d
 		for (int button = 0; button < Mouse.getButtonCount(); button++) {
@@ -299,7 +301,8 @@ public class ModListScreen extends GuiScreen {
 		this.drawStringCentered(font, this.textTitle, this.modList.getWidth() / 2, 8, 0xffffff);
 		super.drawScreen(mouseX, mouseY, delta);
 		if (showModCount || !filterOptionsShown) {
-			font.drawString("Showing " + NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()) + " Mods", searchBoxX, 52, 0xFFFFFF);
+			String showModCountString = i18n.translateKeyAndFormat("modmenu.showingMods", NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()));
+			font.drawString(showModCountString, searchBoxX, 52, 0xFFFFFF);
 		}
 		if (selectedEntry != null) {
 			ModMetadata metadata = selectedEntry.getMetadata();
@@ -316,7 +319,7 @@ public class ModListScreen extends GuiScreen {
             trimmedName = getString(font, name, trimmedName, maxNameWidth);
             font.drawString(trimmedName, x + imageOffset, paneY + 1, 0xFFFFFF);
 			if (mouseX > x + imageOffset && mouseY > paneY + 1 && mouseY < paneY + 1 + 9 && mouseX < x + imageOffset + font.getStringWidth(trimmedName)) {
-				setTooltip("Mod ID: " + metadata.getId());
+				setTooltip(i18n.translateKeyAndFormat("modmenu.modIdToolTip", metadata.getId()));
 			}
 			if (init || badgeRenderer == null || badgeRenderer.getMetadata() != metadata) {
 				badgeRenderer = new BadgeRenderer(mc, x + imageOffset + font.getStringWidth(trimmedName) + 2, paneY, width - 28, selectedEntry.container, this);
@@ -339,13 +342,12 @@ public class ModListScreen extends GuiScreen {
 				} else {
 					authors = names.get(0);
 				}
-				RenderUtils.INSTANCE.drawWrappedString(font, "By " + authors, x + imageOffset, paneY + 2 + lineSpacing * 2, paneWidth - imageOffset - 4, 1, 0x808080);
+				RenderUtils.INSTANCE.drawWrappedString(font, i18n.translateKeyAndFormat("modmenu.authorPrefix", authors), x + imageOffset, paneY + 2 + lineSpacing * 2, paneWidth - imageOffset - 4, 1, 0x808080);
 			}
 			if (this.tooltip != null) {
 				this.renderTooltip(Lists.newArrayList(Splitter.on("\n").split(this.tooltip)), mouseX, mouseY);
 			}
 		}
-
 	}
 
     static String getString(FontRenderer font, String name, String trimmedName, int maxNameWidth) {
