@@ -1,6 +1,5 @@
 package io.github.prospector.modmenu.gui;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import io.github.prospector.modmenu.ModMenu;
@@ -18,14 +17,15 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.render.FontRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.core.lang.I18n;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongepowered.include.com.google.common.base.Joiner;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -35,7 +35,7 @@ import java.util.*;
 public class ModListScreen extends GuiScreen {
 	private static final String FILTERS_BUTTON_LOCATION = "/assets/" + ModMenu.MOD_ID + "/textures/gui/filters_button.png";
 	private static final String CONFIGURE_BUTTON_LOCATION = "/assets/" + ModMenu.MOD_ID + "/textures/gui/configure_button.png";
-	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Logger LOGGER = LoggerFactory.getLogger("modlistscreen");
 	private final String textTitle;
 	private TextFieldWidget searchBox;
 	private DescriptionListWidget descriptionListWidget;
@@ -87,12 +87,12 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void updateScreen() {
+	public void tick() {
 		this.searchBox.updateCursorCounter();
 	}
 
 	@Override
-	public void initGui() {
+	public void init() {
 		I18n i18n = I18n.getInstance();
 		Keyboard.enableRepeatEvents(true);
 		FontRenderer font = fontRenderer;
@@ -265,8 +265,8 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void mouseMovedOrUp(int mouseX, int mouseY, int mouseButton) {
-		super.mouseMovedOrUp(mouseX, mouseY, mouseButton);
+	public void mouseMovedOrButtonReleased(int mouseX, int mouseY, int mouseButton) {
+		super.mouseMovedOrButtonReleased(mouseX, mouseY, mouseButton);
 		if (mouseButton != -1) {
 			modList.mouseReleased(mouseX, mouseY, mouseButton);
 			descriptionListWidget.mouseReleased(mouseX, mouseY, mouseButton);
@@ -377,8 +377,8 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void onGuiClosed() {
-		super.onGuiClosed();
+	public void onClosed() {
+		super.onClosed();
 		this.modList.close();
 	}
 

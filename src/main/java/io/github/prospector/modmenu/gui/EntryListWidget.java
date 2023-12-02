@@ -1,17 +1,17 @@
 package io.github.prospector.modmenu.gui;
 
 
-import com.google.common.collect.Lists;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.core.util.helper.MathHelper;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
+import org.spongepowered.include.com.google.common.collect.Lists;
 
-import javax.annotation.Nullable;
 import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
