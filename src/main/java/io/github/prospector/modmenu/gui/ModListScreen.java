@@ -16,6 +16,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.render.FontRenderer;
 import net.minecraft.client.render.Tessellator;
+import net.minecraft.core.Global;
 import net.minecraft.core.lang.I18n;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
@@ -313,6 +314,9 @@ public class ModListScreen extends GuiScreen {
             int lineSpacing = 9 + 1;
 			int imageOffset = 36;
 			String name = metadata.getName();
+			if (name.equals("Minecraft")){ // BAD CODE
+				name = "Better than Adventure";
+			}
 			name = HardcodedUtil.formatFabricModuleName(name);
 			String trimmedName = name;
 			int maxNameWidth = this.width - (x + imageOffset);
@@ -326,7 +330,13 @@ public class ModListScreen extends GuiScreen {
 				init = false;
 			}
 			badgeRenderer.draw(mouseX, mouseY);
-			font.drawString("v" + metadata.getVersion().getFriendlyString(), x + imageOffset, paneY + 2 + lineSpacing, 0x808080);
+			String versionString;
+			if (metadata.getName().equals("Minecraft")){  // BAD CODE
+				versionString = Global.VERSION;
+			} else {
+				versionString = metadata.getVersion().getFriendlyString();
+			}
+			font.drawString("v" + versionString, x + imageOffset, paneY + 2 + lineSpacing, 0x808080);
 			String authors;
 			List<String> names = new ArrayList<>();
 
