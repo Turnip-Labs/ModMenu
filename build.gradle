@@ -44,6 +44,22 @@ repositories {
 		metadataSources { artifact() }
 	}
 	ivy {
+		url = "https://github.com/Turnip-Labs"
+		patternLayout {
+			artifact "[organisation]/releases/download/[revision]/[module]-[revision].jar"
+			m2compatible = true
+		}
+		metadataSources { artifact() }
+	}
+	ivy {
+		url = "https://github.com/Turnip-Labs"
+		patternLayout {
+			artifact "[organisation]/releases/download/[revision]/[module]-bta-[revision].jar"
+			m2compatible = true
+		}
+		metadataSources { artifact() }
+	}
+	ivy {
 		url = "https://piston-data.mojang.com"
 		patternLayout {
 			artifact "v1/[organisation]/[revision]/[module].jar"
@@ -69,7 +85,7 @@ dependencies {
 	modImplementation "fabric-loader:fabric-loader:${project.loader_version}"
 
 	// Helper library for translations
-	modImplementation files("lib/halplibe-${halplibe_version}.jar")
+	//modImplementation "bta-halplibe:halplibe:${project.halplibe_version}"
 
 	implementation "org.slf4j:slf4j-api:1.8.0-beta4"
 	implementation "org.apache.logging.log4j:log4j-slf4j18-impl:2.16.0"
