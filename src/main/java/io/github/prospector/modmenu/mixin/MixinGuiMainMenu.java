@@ -21,7 +21,7 @@ public class MixinGuiMainMenu extends GuiScreen {
 	public void modmenu$drawMenuButton(CallbackInfo info) {
 		I18n i18n = I18n.getInstance();
 		GuiButton texturePackButton = this.controlList.get(2);
-		texturePackButton.displayString = new Random().nextInt(1000) == 0 ? "Twin Peaks" : i18n.translateKey("menu.mods");
+		texturePackButton.displayString = new Random().nextInt(1000) == 0 ? "Twin Peaks" : i18n.translateKey("gui.main_menu.button.texture_packs");
 		int newWidth = ((GuiButtonAccessor) texturePackButton).getWidth() / 2 - 1;
 		((GuiButtonAccessor) texturePackButton).setWidth(newWidth);
 		String buttonText = i18n.translateKey("modmenu.title") + " " + i18n.translateKeyAndFormat("modmenu.loaded", ModMenu.getFormattedModCount());
