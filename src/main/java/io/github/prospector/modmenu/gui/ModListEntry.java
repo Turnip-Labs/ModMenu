@@ -46,7 +46,11 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 		GL11.glColor4f(1f, 1f, 1f, 1f);
 		this.bindIconTexture();
         internalRender(y, x);
-        String name = HardcodedUtil.formatFabricModuleName(metadata.getName());
+		String name = metadata.getName();
+		if (name.equals("Minecraft")){  // BAD CODE
+			name = "Better than Adventure";
+		}
+        name = HardcodedUtil.formatFabricModuleName(name);
 		String trimmedName = name;
 		int maxNameWidth = rowWidth - 32 - 3;
 		FontRenderer font = this.client.fontRenderer;

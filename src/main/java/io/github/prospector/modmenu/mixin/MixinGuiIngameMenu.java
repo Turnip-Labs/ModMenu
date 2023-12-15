@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = GuiIngameMenu.class, remap = false)
 public class MixinGuiIngameMenu extends GuiScreen {
 	@SuppressWarnings("unchecked")
-	@Inject(at = @At("RETURN"), method = "initGui")
+	@Inject(at = @At("RETURN"), method = "init")
 	public void modmenu$drawMenuButton(CallbackInfo info) {
 		I18n i18n = I18n.getInstance();
 		String buttonText = i18n.translateKey("modmenu.title") + " " + i18n.translateKeyAndFormat("modmenu.loaded", ModMenu.getFormattedModCount());

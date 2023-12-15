@@ -9,8 +9,7 @@ import com.google.gson.GsonBuilder;
 import io.github.prospector.modmenu.api.ModMenuApi;
 import io.github.prospector.modmenu.config.ModMenuConfigManager;
 import io.github.prospector.modmenu.util.HardcodedUtil;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
+import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
@@ -18,17 +17,17 @@ import net.fabricmc.loader.api.metadata.ModEnvironment;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.options.GuiOptionsPageGeneral;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraft.client.gui.options.GuiOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.function.Function;
 
-public class ModMenu implements ClientModInitializer {
+public class ModMenu implements ModInitializer {
 	public static final String MOD_ID = "modmenu";
-	public static final Logger LOGGER = LogManager.getLogger("Mod Menu");
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting().create();
 
 	private static final Map<String, Runnable> LEGACY_CONFIG_SCREEN_TASKS = new HashMap<>();
@@ -70,7 +69,7 @@ public class ModMenu implements ClientModInitializer {
 
 	@SuppressWarnings("RedundantCollectionOperation")
 	@Override
-	public void onInitializeClient() {
+	public void onInitialize() {
 		ModMenuConfigManager.initializeConfig();
 		ImmutableMap.Builder<String, Function<GuiScreen, ? extends GuiScreen>> factories = ImmutableMap.builder();
 		FabricLoader.getInstance().getEntrypointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
@@ -86,7 +85,7 @@ public class ModMenu implements ClientModInitializer {
                 CUSTOM_BADGE_MODS.put(mod.getMetadata().getId(), map);
             });
         });
-		factories.put("minecraft", (screenBase -> new GuiOptionsPageGeneral(screenBase, ((Minecraft) FabricLoader.getInstance().getGameInstance()).gameSettings)));
+		factories.put("minecraft", (screenBase -> new GuiOptions(screenBase, ((Minecraft) FabricLoader.getInstance().getGameInstance()).gameSettings)));
 		configScreenFactories = factories.build();
 		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
 		HardcodedUtil.initializeHardcodings();

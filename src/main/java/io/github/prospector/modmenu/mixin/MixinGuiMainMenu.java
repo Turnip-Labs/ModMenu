@@ -17,7 +17,7 @@ import java.util.Random;
 
 @Mixin(value = GuiMainMenu.class, remap = false)
 public class MixinGuiMainMenu extends GuiScreen {
-	@Inject(at = @At("RETURN"), method = "initGui")
+	@Inject(at = @At("RETURN"), method = "init")
 	public void modmenu$drawMenuButton(CallbackInfo info) {
 		I18n i18n = I18n.getInstance();
 		GuiButton texturePackButton = this.controlList.get(2);
