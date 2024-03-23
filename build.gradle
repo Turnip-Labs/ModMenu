@@ -85,12 +85,12 @@ dependencies {
 	modImplementation "fabric-loader:fabric-loader:${project.loader_version}"
 
 	// Helper library for translations
-	modImplementation "bta-halplibe:halplibe:${project.halplibe_version}"
+	//modImplementation "bta-halplibe:halplibe:${project.halplibe_version}"
 
 	implementation "org.slf4j:slf4j-api:1.8.0-beta4"
 	implementation "org.apache.logging.log4j:log4j-slf4j18-impl:2.16.0"
 
-	implementation 'com.google.guava:guava:28.0-jre'
+	implementation 'com.google.guava:guava:33.0.0-jre'
 	implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
 
 	var log4jVersion = "2.20.0"
