@@ -5,20 +5,20 @@ import io.github.prospector.modmenu.util.HardcodedUtil;
 import io.github.prospector.modmenu.util.RenderUtils;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Font;
 import net.minecraft.core.lang.I18n;
 
 import java.util.Collection;
 
 public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget.DescriptionEntry> {
 	private final ModListScreen parent;
-	private final FontRenderer textRenderer;
+	private final Font textRenderer;
 	private ModListEntry lastSelected = null;
 
 	public DescriptionListWidget(Minecraft client, int width, int height, int top, int bottom, int entryHeight, ModListScreen parent) {
 		super(client, width, height, top, bottom, entryHeight);
 		this.parent = parent;
-		this.textRenderer = client.fontRenderer;
+		this.textRenderer = client.font;
 	}
 
 	@Override

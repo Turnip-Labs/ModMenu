@@ -3,7 +3,7 @@ package io.github.prospector.modmenu.api;
 
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.util.TriConsumer;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.Screen;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Optional;
@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 
 public interface ModMenuApi {
 	/**
-	 * Replaced with {@link ModMenuApi#getConfigScreen(GuiScreen)}, with
+	 * Replaced with {@link ModMenuApi#getConfigScreen(Screen)}, with
 	 * the ModMenuApi implemented onto a class that is added as an
 	 * entry point to your fabric mod metadata.
 	 *
@@ -30,7 +30,6 @@ public interface ModMenuApi {
 	 * itself provides provider info for entrypoints.
 	 */
 	@Deprecated
-	@ApiStatus.ScheduledForRemoval(inVersion = "2.1.0")
 	String getModId();
 
 	/**
@@ -42,7 +41,7 @@ public interface ModMenuApi {
 	 */
 	@Deprecated
     @ApiStatus.Internal
-	default Optional<Supplier<GuiScreen>> getConfigScreen(GuiScreen screen) {
+	default Optional<Supplier<Screen>> getConfigScreen(Screen screen) {
 		return Optional.empty();
 	}
 
@@ -53,7 +52,7 @@ public interface ModMenuApi {
 	 *
 	 * @return A factory function for constructing config screen instances.
 	 */
-	default Function<GuiScreen, ? extends GuiScreen> getConfigScreenFactory() {
+	default Function<Screen, ? extends Screen> getConfigScreenFactory() {
 		return screen -> getConfigScreen(screen).map(Supplier::get).orElse(null);
 	}
 

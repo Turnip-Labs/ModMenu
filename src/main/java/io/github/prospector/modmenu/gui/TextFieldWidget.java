@@ -3,10 +3,10 @@ package io.github.prospector.modmenu.gui;
 
 import io.github.prospector.modmenu.mixin.MinecraftAccessor;
 import io.github.prospector.modmenu.mixin.TextFieldEditorAccessor;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.Screen;
 import net.minecraft.client.gui.text.ITextField;
 import net.minecraft.client.gui.text.TextFieldEditor;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Font;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.core.enums.EnumOS;
 import org.jetbrains.annotations.Nullable;
@@ -17,8 +17,8 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.function.Predicate;
 
-public class TextFieldWidget extends GuiScreen implements ITextField {
-	private final FontRenderer font;
+public class TextFieldWidget extends Screen implements ITextField {
+	private final Font font;
 	private final TextFieldEditor handler;
 	public int x;
 	public int y;
@@ -68,7 +68,7 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 
 	private final @Nullable String emptyText;
 
-	public TextFieldWidget(FontRenderer font, int x, int y, int width, int height, String emptyText) {
+	public TextFieldWidget(Font font, int x, int y, int width, int height, String emptyText) {
 		this.font = font;
 		this.x = x;
 		this.y = y;
@@ -78,7 +78,7 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 		this.emptyText = emptyText;
 	}
 
-	public TextFieldWidget(FontRenderer font, int x, int y, int width, int height) {
+	public TextFieldWidget(Font font, int x, int y, int width, int height) {
 		this(font, x, y, width, height, null);
 	}
 
@@ -334,90 +334,81 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 
 			return true;
 		} else {
-			switch (keyCode) {
-				case Keyboard.KEY_BACK:
+            if (keyCode == Keyboard.KEY_BACK) {
+                if (isCtrlKeyDown()) {
+                    if (isEnabled) {
+                        deleteWords(-1);
+                    }
+                } else if (isEnabled) {
+                    deleteFromCursor(-1);
+                }
 
-					if (isCtrlKeyDown()) {
-						if (isEnabled) {
-							deleteWords(-1);
-						}
-					} else if (isEnabled) {
-						deleteFromCursor(-1);
-					}
+                return true;
+            } else if (keyCode == Keyboard.KEY_HOME) {
+                if (isShiftKeyDown()) {
+                    setSelectionPos(0);
+                } else {
+                    setCursorPositionZero();
+                }
 
-					return true;
-				case Keyboard.KEY_HOME:
+                return true;
+            } else if (keyCode == Keyboard.KEY_LEFT) {
+                if (isShiftKeyDown()) {
+                    if (isCtrlKeyDown()) {
+                        setSelectionPos(getNthWordFromPos(-1, getSelectionEnd()));
+                    } else {
+                        setSelectionPos(getSelectionEnd() - 1);
+                    }
+                } else if (isCtrlKeyDown()) {
+                    setCursorPosition(getNthWordFromCursor(-1));
+                } else {
+                    moveCursorBy(-1);
+                }
 
-					if (isShiftKeyDown()) {
-						setSelectionPos(0);
-					} else {
-						setCursorPositionZero();
-					}
+                return true;
+            } else if (keyCode == Keyboard.KEY_RIGHT) {
+                if (isShiftKeyDown()) {
+                    if (isCtrlKeyDown()) {
+                        setSelectionPos(getNthWordFromPos(1, getSelectionEnd()));
+                    } else {
+                        setSelectionPos(getSelectionEnd() + 1);
+                    }
+                } else if (isCtrlKeyDown()) {
+                    setCursorPosition(getNthWordFromCursor(1));
+                } else {
+                    moveCursorBy(1);
+                }
 
-					return true;
-				case Keyboard.KEY_LEFT:
+                return true;
+            } else if (keyCode == Keyboard.KEY_END) {
+                if (isShiftKeyDown()) {
+                    setSelectionPos(text.length());
+                } else {
+                    setCursorPositionEnd();
+                }
 
-					if (isShiftKeyDown()) {
-						if (isCtrlKeyDown()) {
-							setSelectionPos(getNthWordFromPos(-1, getSelectionEnd()));
-						} else {
-							setSelectionPos(getSelectionEnd() - 1);
-						}
-					} else if (isCtrlKeyDown()) {
-						setCursorPosition(getNthWordFromCursor(-1));
-					} else {
-						moveCursorBy(-1);
-					}
+                return true;
+            } else if (keyCode == Keyboard.KEY_DELETE) {
+                if (isCtrlKeyDown()) {
+                    if (isEnabled) {
+                        deleteWords(1);
+                    }
+                } else if (isEnabled) {
+                    deleteFromCursor(1);
+                }
 
-					return true;
-				case Keyboard.KEY_RIGHT:
+                return true;
+            }
+            if (isAllowedCharacter(typedChar)) {
+                if (isEnabled) {
+                    writeText(Character.toString(typedChar));
+                }
 
-					if (isShiftKeyDown()) {
-						if (isCtrlKeyDown()) {
-							setSelectionPos(getNthWordFromPos(1, getSelectionEnd()));
-						} else {
-							setSelectionPos(getSelectionEnd() + 1);
-						}
-					} else if (isCtrlKeyDown()) {
-						setCursorPosition(getNthWordFromCursor(1));
-					} else {
-						moveCursorBy(1);
-					}
-
-					return true;
-				case Keyboard.KEY_END:
-
-					if (isShiftKeyDown()) {
-						setSelectionPos(text.length());
-					} else {
-						setCursorPositionEnd();
-					}
-
-					return true;
-				case Keyboard.KEY_DELETE:
-
-					if (isCtrlKeyDown()) {
-						if (isEnabled) {
-							deleteWords(1);
-						}
-					} else if (isEnabled) {
-						deleteFromCursor(1);
-					}
-
-					return true;
-				default:
-
-					if (isAllowedCharacter(typedChar)) {
-						if (isEnabled) {
-							writeText(Character.toString(typedChar));
-						}
-
-						return true;
-					} else {
-						return false;
-					}
-			}
-		}
+                return true;
+            } else {
+                return false;
+            }
+        }
 	}
 
 	/**
@@ -743,11 +734,11 @@ public class TextFieldWidget extends GuiScreen implements ITextField {
 		}
 	}
 
-	private static String trimStringToWidth(FontRenderer font, String text, int maxWidth) {
+	private static String trimStringToWidth(Font font, String text, int maxWidth) {
 		return trimStringToWidth(font, text, maxWidth, false);
 	}
 
-	private static String trimStringToWidth(FontRenderer font, String text, int maxWidth, boolean reverse) {
+	private static String trimStringToWidth(Font font, String text, int maxWidth, boolean reverse) {
 		int width = 0;
 		int length;
 		for (length = 0; length < text.length() && width < maxWidth; length++)

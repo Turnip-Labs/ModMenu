@@ -17,5 +17,9 @@ pluginManagement {
             name = 'Quilt'
             url = 'https://maven.quiltmc.org/repository/release'
         }
+        maven {
+            name = 'signalumMaven'
+            url = 'https://maven.thesignalumproject.net/infrastructure'
+        }
     }
 }

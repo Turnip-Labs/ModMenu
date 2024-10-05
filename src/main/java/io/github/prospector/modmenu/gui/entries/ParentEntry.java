@@ -7,7 +7,7 @@ import io.github.prospector.modmenu.gui.ModListWidget;
 import io.github.prospector.modmenu.util.ModListSearch;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Font;
 import net.minecraft.client.render.tessellator.Tessellator;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -31,7 +31,7 @@ public class ParentEntry extends ModListEntry {
 	@Override
 	public void render(int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
 		super.render(index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
-		FontRenderer font = client.fontRenderer;
+		Font font = client.font;
 		int childrenBadgeHeight = 9;
 		int childrenBadgeWidth = 9;
 		int children = ModListSearch.search(list.getParent(), list.getParent().getSearchInput(), getChildren()).size();
@@ -52,7 +52,7 @@ public class ParentEntry extends ModListEntry {
 		this.hoveringIcon = mouseX >= x - 1 && mouseX <= x - 1 + 32 && mouseY >= y - 1 && mouseY <= y - 1 + 32;
 		if (isMouseOver(mouseX, mouseY)) {
 			drawRect(x, y, x + 32, y + 32, 0xA0909090);
-			this.client.renderEngine.bindTexture(this.client.renderEngine.getTexture(PARENT_MOD_TEXTURE));
+			this.client.textureManager.bindTexture(this.client.textureManager.loadTexture(PARENT_MOD_TEXTURE));
 			int xOffset = list.getParent().showModChildren.contains(getMetadata().getId()) ? 32 : 0;
 			int yOffset = hoveringIcon ? 32 : 0;
 			GL11.glColor4f(1f, 1f, 1f, 1f);

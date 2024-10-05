@@ -2,12 +2,12 @@ package io.github.prospector.modmenu.gui;
 
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.gui.ButtonElement;
+import net.minecraft.client.render.Font;
 import net.minecraft.client.render.tessellator.Tessellator;
 import org.lwjgl.opengl.GL11;
 
-public class ModMenuTexturedButtonWidget extends GuiButton {
+public class ModMenuTexturedButtonWidget extends ButtonElement {
 	private final String texture;
 	private final int u;
 	private final int v;
@@ -47,8 +47,8 @@ public class ModMenuTexturedButtonWidget extends GuiButton {
 
 	public void render(Minecraft mc, int mouseX, int mouseY) {
 		if (this.visible) {
-			FontRenderer font = mc.fontRenderer;
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(texture));
+			Font font = mc.font;
+			mc.textureManager.bindTexture(mc.textureManager.loadTexture(texture));
 			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 			boolean hovered = isHovered(mouseX, mouseY);
 

@@ -66,9 +66,9 @@ public class BadgeRenderer {
 	}
 
 	public void drawBadge(String text, int outlineColor, int fillColor, int mouseX, int mouseY) {
-		int width = client.fontRenderer.getStringWidth(text) + 6;
+		int width = client.font.getStringWidth(text) + 6;
 		if (badgeX + width < badgeMax) {
-			RenderUtils.INSTANCE.drawBadge(client.fontRenderer, badgeX, badgeY, width, text, outlineColor, fillColor, 0xCACACA);
+			RenderUtils.INSTANCE.drawBadge(client.font, badgeX, badgeY, width, text, outlineColor, fillColor, 0xCACACA);
 			badgeX += width + 3;
 		}
 	}

@@ -15,8 +15,8 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModEnvironment;
 import net.fabricmc.loader.api.metadata.ModMetadata;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.options.GuiOptions;
+import net.minecraft.client.gui.Screen;
+import net.minecraft.client.gui.options.OptionsScreen;
 import net.minecraft.client.gui.options.data.OptionsPages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +37,14 @@ public class ModMenu implements ModInitializer {
 	public static final Set<String> PATCHWORK_FORGE_MODS = new HashSet<>();
     public static final Map<String, Map<String, Map.Entry<Integer, Integer>>> CUSTOM_BADGE_MODS = new HashMap<>();
 	public static final LinkedListMultimap<ModContainer, ModContainer> PARENT_MAP = LinkedListMultimap.create();
-	private static ImmutableMap<String, Function<GuiScreen, ? extends GuiScreen>> configScreenFactories = ImmutableMap.of();
+	private static ImmutableMap<String, Function<Screen, ? extends Screen>> configScreenFactories = ImmutableMap.of();
 
 	public static boolean hasConfigScreenFactory(String modid) {
 		return configScreenFactories.containsKey(modid);
 	}
 
-	public static GuiScreen getConfigScreen(String modid, GuiScreen menuScreen) {
-		Function<GuiScreen, ? extends GuiScreen> factory = configScreenFactories.get(modid);
+	public static Screen getConfigScreen(String modid, Screen menuScreen) {
+		Function<Screen, ? extends Screen> factory = configScreenFactories.get(modid);
 		return factory != null ? factory.apply(menuScreen) : null;
 	}
 
@@ -71,7 +71,7 @@ public class ModMenu implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModMenuConfigManager.initializeConfig();
-		ImmutableMap.Builder<String, Function<GuiScreen, ? extends GuiScreen>> factories = ImmutableMap.builder();
+		ImmutableMap.Builder<String, Function<Screen, ? extends Screen>> factories = ImmutableMap.builder();
 		FabricLoader.getInstance().getEntrypointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
 			ModMenuApi api = entrypoint.getEntrypoint();
 			ModContainer mod = entrypoint.getProvider();
@@ -85,7 +85,7 @@ public class ModMenu implements ModInitializer {
                 CUSTOM_BADGE_MODS.put(mod.getMetadata().getId(), map);
             });
         });
-		factories.put("minecraft", (screenBase -> new GuiOptions(screenBase, OptionsPages.GENERAL)));
+		factories.put("minecraft", (screenBase -> new OptionsScreen(screenBase, OptionsPages.GENERAL)));
 		configScreenFactories = factories.build();
 		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
 		HardcodedUtil.initializeHardcodings();

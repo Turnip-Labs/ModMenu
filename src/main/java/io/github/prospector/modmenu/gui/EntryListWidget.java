@@ -4,7 +4,7 @@ package io.github.prospector.modmenu.gui;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.Screen;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.core.util.helper.MathHelper;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +19,7 @@ import java.util.Objects;
 
 @SuppressWarnings({"unchecked", "unused"})
 @Environment(EnvType.CLIENT)
-public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extends GuiScreen {
+public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extends Screen {
 	protected static final int DRAG_OUTSIDE = -2;
 	protected final Minecraft minecraft;
 	protected final int itemHeight;
@@ -128,7 +128,7 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 		int j = this.left + this.width / 2;
 		int k = j - i;
 		int l = j + i;
-		int m = MathHelper.floor_double(e - (double)this.top) - this.headerHeight + (int)this.getScrollAmount() - 4; // convertToBlockCoord
+		int m = MathHelper.floor(e - (double)this.top) - this.headerHeight + (int)this.getScrollAmount() - 4; // convertToBlockCoord
 		int n = m / this.itemHeight;
 		return d < (double)this.getScrollbarPosition() && d >= (double)k && d <= (double)l && n >= 0 && m >= 0 && n < this.getItemCount() ? this.children().get(n) : null;
 	}
@@ -170,7 +170,7 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 		int k = this.getScrollbarPosition();
 		int l = k + 6;
 		Tessellator tessellator = Tessellator.instance;
-		this.minecraft.renderEngine.bindTexture(this.minecraft.renderEngine.getTexture("/gui/background.png"));
+		this.minecraft.textureManager.bindTexture(this.minecraft.textureManager.loadTexture("/gui/background.png"));
 		GL11.glColor4f(1f, 1f, 1f, 1f);
 		float g = 32.0F;
 		tessellator.startDrawingQuads();
@@ -446,7 +446,7 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 
 	protected void renderHoleBackground(int i, int j, int k, int l) {
 		Tessellator tessellator = Tessellator.instance;
-		this.minecraft.renderEngine.bindTexture(this.minecraft.renderEngine.getTexture("/gui/background.png"));
+		this.minecraft.textureManager.bindTexture(this.minecraft.textureManager.loadTexture("/gui/background.png"));
 		GL11.glColor4f(1f, 1f, 1f, 1f);
 		float f = 32.0F;
 		tessellator.startDrawingQuads();
@@ -506,7 +506,7 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 	}
 
 	@Environment(EnvType.CLIENT)
-	public abstract static class Entry<E extends EntryListWidget.Entry<E>> extends GuiScreen {
+	public abstract static class Entry<E extends EntryListWidget.Entry<E>> extends Screen {
 		@Deprecated
 		EntryListWidget<E> list;
 

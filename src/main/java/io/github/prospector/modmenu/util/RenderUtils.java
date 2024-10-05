@@ -3,20 +3,20 @@ package io.github.prospector.modmenu.util;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.gui.Screen;
+import net.minecraft.client.render.Font;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public final class RenderUtils extends GuiScreen {
+public final class RenderUtils extends Screen {
 
 	public static final RenderUtils INSTANCE = new RenderUtils();
 	private RenderUtils() {}
 
-	public List<String> wrapStringToWidthAsList(FontRenderer font, String text, int width) {
+	public List<String> wrapStringToWidthAsList(Font font, String text, int width) {
 		List<String> words = new ArrayList<>();
 		if (text != null)
 			Collections.addAll(words, text.split(" "));
@@ -40,7 +40,7 @@ public final class RenderUtils extends GuiScreen {
 		return strings;
 	}
 
-	public void drawWrappedString(FontRenderer font, String string, int x, int y, int wrapWidth, int lines, int color) {
+	public void drawWrappedString(Font font, String string, int x, int y, int wrapWidth, int lines, int color) {
 		while (string != null && string.endsWith("\n")) {
 			string = string.substring(0, string.length() - 1);
 		}
@@ -59,7 +59,7 @@ public final class RenderUtils extends GuiScreen {
 		}
 	}
 
-	public void drawBadge(FontRenderer font, int x, int y, int tagWidth, String text, int outlineColor, int fillColor, int textColor) {
+	public void drawBadge(Font font, int x, int y, int tagWidth, String text, int outlineColor, int fillColor, int textColor) {
 		drawRect(x + 1, y - 1, x + tagWidth, y, outlineColor);
         drawRect(x, y, x + 1, y + 9, outlineColor);
         drawRect(x + 1, y + 1 + 9 - 1, x + tagWidth, y + 9 + 1, outlineColor);

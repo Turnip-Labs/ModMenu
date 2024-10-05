@@ -9,11 +9,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.render.Font;
 import net.minecraft.client.render.tessellator.Tessellator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,7 +24,7 @@ import java.util.Objects;
 
 public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEntry> {
 	public static final String UNKNOWN_ICON = "/gui/unknown_pack.png";
-	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ModMenu.MOD_ID);
 
 	protected final Minecraft client;
 	protected final ModContainer container;
@@ -53,7 +53,7 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
         name = HardcodedUtil.formatFabricModuleName(name);
 		String trimmedName = name;
 		int maxNameWidth = rowWidth - 32 - 3;
-		FontRenderer font = this.client.fontRenderer;
+		Font font = this.client.font;
         trimmedName = ModListScreen.getString(font, name, trimmedName, maxNameWidth);
         font.drawString(trimmedName, x + 32 + 3, y + 1, 0xFFFFFF);
 		new BadgeRenderer(client, x + 32 + 3 + font.getStringWidth(name) + 2, y, x + rowWidth, container, list.getParent()).draw(mouseX, mouseY);
@@ -126,17 +126,18 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 		if (this.iconLocation == null) {
 			BufferedImage icon = this.createIcon();
 			if (icon != null) {
-				this.iconLocation = this.client.renderEngine.allocateAndSetupTexture(icon);
+				this.iconLocation = this.client.textureManager.loadBufferedTexture(icon).id();
 			} else {
-				this.iconLocation = this.client.renderEngine.getTexture(UNKNOWN_ICON);
+				this.iconLocation = this.client.textureManager.loadTexture(UNKNOWN_ICON).id();
 			}
 		}
-		this.client.renderEngine.bindTexture(this.iconLocation);
+		this.client.textureManager.bindTexture(this.iconLocation);
 	}
 
 	public void deleteTexture() {
 		if (iconLocation != null) {
-			this.client.renderEngine.deleteTexture(iconLocation); // func_1078_a
+			this.client.textureManager.idToTextureMap.remove(iconLocation);
+			GL11.glDeleteTextures(iconLocation);
 		}
 	}
 

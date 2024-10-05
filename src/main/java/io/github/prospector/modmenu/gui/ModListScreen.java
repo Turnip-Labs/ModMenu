@@ -12,9 +12,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.render.FontRenderer;
+import net.minecraft.client.gui.ButtonElement;
+import net.minecraft.client.gui.Screen;
+import net.minecraft.client.render.Font;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.core.Global;
 import net.minecraft.core.lang.I18n;
@@ -33,14 +33,14 @@ import java.net.MalformedURLException;
 import java.text.NumberFormat;
 import java.util.*;
 
-public class ModListScreen extends GuiScreen {
+public class ModListScreen extends Screen {
 	private static final String FILTERS_BUTTON_LOCATION = "/assets/" + ModMenu.MOD_ID + "/textures/gui/filters_button.png";
 	private static final String CONFIGURE_BUTTON_LOCATION = "/assets/" + ModMenu.MOD_ID + "/textures/gui/configure_button.png";
 	private static final Logger LOGGER = LoggerFactory.getLogger("modlistscreen");
 	private final String textTitle;
 	private TextFieldWidget searchBox;
 	private DescriptionListWidget descriptionListWidget;
-	private final GuiScreen parent;
+	private final Screen parent;
 	private ModListWidget modList;
 	private String tooltip;
 	private ModListEntry selected;
@@ -65,17 +65,17 @@ public class ModListScreen extends GuiScreen {
 	private static final int MODS_FOLDER_BUTTON_ID = 6;
 	private static final int DONE_BUTTON_ID = 7;
 
-	public ModListScreen(GuiScreen previousGui) {
+	public ModListScreen(Screen previousGui) {
 		this.parent = previousGui;
 		this.textTitle = I18n.getInstance().translateKey("modmenu.title");
 	}
 
-	public void handleInput() {
-		super.handleInput();
+	public void updateEvents() {
+		super.updateEvents();
 		int dWheel = Mouse.getEventDWheel() / 50;
 		if (dWheel != 0) {
-			int mouseX = Mouse.getEventX() * this.width / this.mc.resolution.width; // field_6326_c
-			int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.resolution.height - 1; // field_6325_d
+			int mouseX = Mouse.getEventX() * this.width / this.mc.resolution.getScaledHeightScreenCoords(); // field_6326_c
+			int mouseY = this.height - Mouse.getEventY() * this.height / this.mc.resolution.getScaledHeightScreenCoords() - 1; // field_6325_d
 			mouseScrolled(mouseX, mouseY, dWheel);
 		}
 	}
@@ -96,7 +96,7 @@ public class ModListScreen extends GuiScreen {
 	public void init() {
 		I18n i18n = I18n.getInstance();
 		Keyboard.enableRepeatEvents(true);
-		FontRenderer font = fontRenderer;
+		Font font = this.font;
 		paneY = 48;
 		paneWidth = this.width / 2 - 8;
 		rightPaneX = width - paneWidth;
@@ -104,13 +104,13 @@ public class ModListScreen extends GuiScreen {
 		int searchBoxWidth = paneWidth - 32 - 22;
 		searchBoxX = paneWidth / 2 - searchBoxWidth / 2 - 22 / 2;
 		String oldText = this.searchBox == null ? "" : this.searchBox.getText();
-		this.searchBox = new TextFieldWidget(this.fontRenderer, searchBoxX, 22, searchBoxWidth, 20, i18n.translateKey("modmenu.search")); // field_6451_g
+		this.searchBox = new TextFieldWidget(this.font, searchBoxX, 22, searchBoxWidth, 20, i18n.translateKey("modmenu.search")); // field_6451_g
 		this.searchBox.setText(oldText);
 		this.modList = new ModListWidget(this.mc, paneWidth, this.height, paneY + 19, this.height - 36, 36, this.searchBox.getText(), this.modList, this);
 		this.modList.setLeftPos(0);
 		this.descriptionListWidget = new DescriptionListWidget(this.mc, paneWidth, this.height, paneY + 60, this.height - 36, 9 + 1, this);
 		this.descriptionListWidget.setLeftPos(rightPaneX);
-		GuiButton configureButton = new ModMenuTexturedButtonWidget(CONFIGURE_BUTTON_ID, width - 24, paneY, 20, 20, 0, 0, CONFIGURE_BUTTON_LOCATION, 32, 64) {
+		ButtonElement configureButton = new ModMenuTexturedButtonWidget(CONFIGURE_BUTTON_ID, width - 24, paneY, 20, 20, 0, 0, CONFIGURE_BUTTON_LOCATION, 32, 64) {
 
 			@Override
 			public void render(Minecraft mc, int mouseX, int mouseY) {
@@ -127,7 +127,7 @@ public class ModListScreen extends GuiScreen {
 		};
 		int urlButtonWidths = paneWidth / 2 - 2;
 		int cappedButtonWidth = Math.min(urlButtonWidths, 200);
-		GuiButton websiteButton = new GuiButton(WEBSITE_BUTTON_ID, rightPaneX + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, i18n.translateKey("modmenu.website")) {
+		ButtonElement websiteButton = new ButtonElement(WEBSITE_BUTTON_ID, rightPaneX + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, i18n.translateKey("modmenu.website")) {
 			@Override
 			public void drawButton(Minecraft mc, int var1, int var2) {
 				visible = selected != null; // visible = selected != null
@@ -135,7 +135,7 @@ public class ModListScreen extends GuiScreen {
 				super.drawButton(mc, var1, var2);
 			}
 		};
-		GuiButton issuesButton = new GuiButton(ISSUES_BUTTON_ID, rightPaneX + urlButtonWidths + 4 + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, i18n.translateKey("modmenu.issues")) {
+		ButtonElement issuesButton = new ButtonElement(ISSUES_BUTTON_ID, rightPaneX + urlButtonWidths + 4 + (urlButtonWidths / 2) - (cappedButtonWidth / 2), paneY + 36, Math.min(urlButtonWidths, 200), 20, i18n.translateKey("modmenu.issues")) {
 			@Override
 			public void drawButton(Minecraft mc, int var1, int var2) {
 				visible = selected != null; // visible = selected != null
@@ -143,7 +143,7 @@ public class ModListScreen extends GuiScreen {
 				super.drawButton(mc, var1, var2);
 			}
 		};
-		this.controlList.add(new ModMenuTexturedButtonWidget(TOGGLE_FILTER_OPTIONS_BUTTON_ID, paneWidth / 2 + searchBoxWidth / 2 - 20 / 2 + 2, 22, 20, 20, 0, 0, FILTERS_BUTTON_LOCATION, 32, 64) {
+		this.buttons.add(new ModMenuTexturedButtonWidget(TOGGLE_FILTER_OPTIONS_BUTTON_ID, paneWidth / 2 + searchBoxWidth / 2 - 20 / 2 + 2, 22, 20, 20, 0, 0, FILTERS_BUTTON_LOCATION, 32, 64) {
 			@Override
 			public void render(Minecraft mc, int int_1, int int_2) {
 				super.render(mc, int_1, int_2);
@@ -165,7 +165,7 @@ public class ModListScreen extends GuiScreen {
 			filtersX = searchBoxX + searchBoxWidth + 22 - filtersWidth + 1;
 			showModCount = true;
 		}
-		this.controlList.add(new GuiButton(TOGGLE_SORT_MODE_BUTTON_ID, filtersX, 45, sortingWidth, 20, sortingText) {
+		this.buttons.add(new ButtonElement(TOGGLE_SORT_MODE_BUTTON_ID, filtersX, 45, sortingWidth, 20, sortingText) {
 			@Override
 			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
 				visible = enabled = filterOptionsShown;
@@ -173,7 +173,7 @@ public class ModListScreen extends GuiScreen {
 				super.drawButton(mc, mouseX, mouseY);
 			}
 		});
-		this.controlList.add(new GuiButton(TOGGLE_SHOW_LIBRARIES_BUTTON_ID, filtersX + sortingWidth + 2, 45, showLibrariesWidth, 20, showLibrariesText) {
+		this.buttons.add(new ButtonElement(TOGGLE_SHOW_LIBRARIES_BUTTON_ID, filtersX + sortingWidth + 2, 45, showLibrariesWidth, 20, showLibrariesText) {
 			@Override
 			public void drawButton(Minecraft mc, int mouseX, int mouseY) {
 				visible = enabled = filterOptionsShown;
@@ -181,24 +181,24 @@ public class ModListScreen extends GuiScreen {
 				super.drawButton(mc, mouseX, mouseY);
 			}
 		});
-		this.controlList.add(configureButton);
-		this.controlList.add(websiteButton);
-		this.controlList.add(issuesButton);
-		this.controlList.add(ButtonUtil.createButton(MODS_FOLDER_BUTTON_ID, this.width / 2 - 154, this.height - 28, 150, 20, "Open Mods Folder"));
-		this.controlList.add(ButtonUtil.createButton(DONE_BUTTON_ID, this.width / 2 + 4, this.height - 28, 150, 20, "Done"));
+		this.buttons.add(configureButton);
+		this.buttons.add(websiteButton);
+		this.buttons.add(issuesButton);
+		this.buttons.add(ButtonUtil.createButton(MODS_FOLDER_BUTTON_ID, this.width / 2 - 154, this.height - 28, 150, 20, "Open Mods Folder"));
+		this.buttons.add(ButtonUtil.createButton(DONE_BUTTON_ID, this.width / 2 + 4, this.height - 28, 150, 20, "Done"));
 		this.searchBox.setFocused(true);
 
 		init = true;
 	}
 
 	@Override
-	protected void buttonPressed(GuiButton button) {
+	protected void buttonClicked(ButtonElement button) {
 		switch (button.id) {
 			case CONFIGURE_BUTTON_ID: {
 				final String modid = Objects.requireNonNull(selected).getMetadata().getId();
-				final GuiScreen screen = ModMenu.getConfigScreen(modid, this);
+				final Screen screen = ModMenu.getConfigScreen(modid, this);
 				if (screen != null) {
-					mc.displayGuiScreen(screen);
+					mc.displayScreen(screen);
 				} else {
 					ModMenu.openConfigScreen(modid);
 				}
@@ -238,7 +238,7 @@ public class ModListScreen extends GuiScreen {
 				break;
 			}
 			case DONE_BUTTON_ID: {
-				mc.displayGuiScreen(parent);
+				mc.displayScreen(parent);
 				break;
 			}
 		}
@@ -249,10 +249,10 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void keyTyped(char char_1, int int_1, int mouseX, int mouseY) {
+	public void keyPressed(char char_1, int int_1, int mouseX, int mouseY) {
 		this.searchBox.textboxKeyTyped(char_1, int_1);
         if (int_1 == 1) {
-            this.mc.displayGuiScreen(this.parent);
+            this.mc.displayScreen(this.parent);
         }
 		modList.keyPressed(int_1, 0, 0);
 		descriptionListWidget.keyPressed(int_1, 0, 0);
@@ -266,26 +266,26 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void mouseMovedOrButtonReleased(int mouseX, int mouseY, int mouseButton) {
-		super.mouseMovedOrButtonReleased(mouseX, mouseY, mouseButton);
+	public void mouseReleased(int mouseX, int mouseY, int mouseButton) {
+		super.mouseReleased(mouseX, mouseY, mouseButton);
 		if (mouseButton != -1) {
 			modList.mouseReleased(mouseX, mouseY, mouseButton);
 			descriptionListWidget.mouseReleased(mouseX, mouseY, mouseButton);
 		}
 	}
-
+	
 	@Override
-	public void drawScreen(int mouseX, int mouseY, float delta) {
+	public void render(int mouseX, int mouseY, float delta) {
 		I18n i18n = I18n.getInstance();
-		int mouseDX = Mouse.getEventDX() * this.width / this.mc.resolution.width; // field_6326_c
-		int mouseDY = this.height - Mouse.getEventDY() * this.height / this.mc.resolution.height - 1; // field_6325_d
+		int mouseDX = Mouse.getEventDX() * this.width / this.mc.resolution.getScaledWidthScreenCoords(); // field_6326_c
+		int mouseDY = this.height - Mouse.getEventDY() * this.height / this.mc.resolution.getScaledHeightScreenCoords() - 1; // field_6325_d
 		for (int button = 0; button < Mouse.getButtonCount(); button++) {
 			if (Mouse.isButtonDown(button)) {
 				modList.mouseDragged(mouseX, mouseY, button, mouseDX, mouseDY);
 				descriptionListWidget.mouseDragged(mouseX, mouseY, button, mouseDX, mouseDY);
 			}
 		}
-		FontRenderer font = this.fontRenderer;
+		Font font = this.font;
 		if (!searchBox.getText().equals(lastSearchString)) {
 			lastSearchString = searchBox.getText();
 			modList.filter(lastSearchString, false);
@@ -300,7 +300,7 @@ public class ModListScreen extends GuiScreen {
 		this.searchBox.drawTextBox();
 		GL11.glDisable(GL11.GL_BLEND);
 		this.drawStringCentered(font, this.textTitle, this.modList.getWidth() / 2, 8, 0xffffff);
-		super.drawScreen(mouseX, mouseY, delta);
+		super.render(mouseX, mouseY, delta);
 		if (showModCount || !filterOptionsShown) {
 			String showModCountString = i18n.translateKeyAndFormat("modmenu.showingMods", NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()));
 			font.drawString(showModCountString, searchBoxX, 52, 0xFFFFFF);
@@ -360,7 +360,7 @@ public class ModListScreen extends GuiScreen {
 		}
 	}
 
-    static String getString(FontRenderer font, String name, String trimmedName, int maxNameWidth) {
+    static String getString(Font font, String name, String trimmedName, int maxNameWidth) {
         if (font.getStringWidth(name) > maxNameWidth) {
             int maxWidth = maxNameWidth - font.getStringWidth("...");
             trimmedName = "";
@@ -374,7 +374,7 @@ public class ModListScreen extends GuiScreen {
 
     public void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
 		Tessellator tessellator = Tessellator.instance;
-		mc.renderEngine.bindTexture(mc.renderEngine.getTexture("/gui/background.png"));
+		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/gui/background.png"));
 		GL11.glColor4f(1f, 1f, 1f, 1f);
 		tessellator.startDrawingQuads();
 		tessellator.setColorRGBA(red, green, blue, endAlpha);
@@ -387,8 +387,8 @@ public class ModListScreen extends GuiScreen {
 	}
 
 	@Override
-	public void onClosed() {
-		super.onClosed();
+	public void removed() {
+		super.removed();
 		this.modList.close();
 	}
 
@@ -424,7 +424,7 @@ public class ModListScreen extends GuiScreen {
 
 	public void renderTooltip(List<String> list, int i, int j) {
 		if (!list.isEmpty()) {
-			FontRenderer font = fontRenderer;
+			Font font = this.font;
 
 			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
