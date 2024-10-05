@@ -1,6 +1,7 @@
 plugins {
 	id "babric-loom" version "1.1.+"
 	id 'java'
+	id 'maven-publish'
 }
 
 group = project.mod_group
@@ -118,5 +119,27 @@ tasks.withType(JavaCompile).configureEach {
 jar {
 	from("LICENSE") {
 		rename { "${it}_${archivesBaseName}" }
+	}
+}
+
+publishing {
+	repositories {
+		maven {
+			name = "signalumMaven"
+			url = "https://maven.thesignalumproject.net/releases"
+			credentials(PasswordCredentials)
+			authentication {
+				basic(BasicAuthentication)
+			}
+		}
+	}
+
+	publications {
+		maven(MavenPublication) {
+			groupId = project.mod_group
+			artifactId = project.mod_name
+			version = project.mod_version
+			from components.java
+		}
 	}
 }
