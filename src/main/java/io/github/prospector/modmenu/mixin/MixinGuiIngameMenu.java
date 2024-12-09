@@ -5,15 +5,15 @@ import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.gui.ModListScreen;
 import io.github.prospector.modmenu.gui.ModMenuButtonWidget;
 import net.minecraft.client.gui.ButtonElement;
-import net.minecraft.client.gui.PauseScreen;
 import net.minecraft.client.gui.Screen;
+import net.minecraft.client.gui.ScreenPause;
 import net.minecraft.core.lang.I18n;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = PauseScreen.class, remap = false)
+@Mixin(value = ScreenPause.class, remap = false)
 public class MixinGuiIngameMenu extends Screen {
 	@SuppressWarnings("unchecked")
 	@Inject(at = @At("RETURN"), method = "init")

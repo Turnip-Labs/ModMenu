@@ -5,8 +5,8 @@ import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.gui.ModListScreen;
 import io.github.prospector.modmenu.gui.ModMenuButtonWidget;
 import net.minecraft.client.gui.ButtonElement;
-import net.minecraft.client.gui.MainMenuScreen;
 import net.minecraft.client.gui.Screen;
+import net.minecraft.client.gui.ScreenMainMenu;
 import net.minecraft.core.lang.I18n;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
 
-@Mixin(value = MainMenuScreen.class, remap = false)
+@Mixin(value = ScreenMainMenu.class, remap = false)
 public class MixinGuiMainMenu extends Screen {
 	@Inject(at = @At("RETURN"), method = "init")
 	public void modmenu$drawMenuButton(CallbackInfo info) {

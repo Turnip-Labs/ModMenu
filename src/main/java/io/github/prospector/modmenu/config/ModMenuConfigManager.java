@@ -14,7 +14,7 @@ public class ModMenuConfigManager {
 		if (file != null) {
 			return;
 		}
-		file = new File(FabricLoader.getInstance().getConfigDirectory(), ModMenu.MOD_ID + ".json");
+		file = new File(FabricLoader.getInstance().getConfigDir().toFile(), ModMenu.MOD_ID + ".json");
 	}
 
 	public static ModMenuConfig initializeConfig() {

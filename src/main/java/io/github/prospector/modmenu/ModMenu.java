@@ -16,7 +16,7 @@ import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModEnvironment;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.gui.Screen;
-import net.minecraft.client.gui.options.OptionsScreen;
+import net.minecraft.client.gui.options.ScreenOptions;
 import net.minecraft.client.gui.options.data.OptionsPages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public class ModMenu implements ModInitializer {
                 CUSTOM_BADGE_MODS.put(mod.getMetadata().getId(), map);
             });
         });
-		factories.put("minecraft", (screenBase -> new OptionsScreen(screenBase, OptionsPages.GENERAL)));
+		factories.put("minecraft", (screenBase -> new ScreenOptions(screenBase, OptionsPages.GENERAL)));
 		configScreenFactories = factories.build();
 		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
 		HardcodedUtil.initializeHardcodings();
