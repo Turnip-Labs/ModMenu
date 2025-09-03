@@ -5,7 +5,11 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Screen;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.renderer.State;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.util.helper.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -154,7 +158,7 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 	protected void clickedHeader(int i, int j) {
 	}
 
-	protected void renderHeader(int i, int j, Tessellator tessellator) {
+	protected void renderHeader(int i, int j) {
 	}
 
 
@@ -169,49 +173,59 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 		this.renderBackground();
 		int k = this.getScrollbarPosition();
 		int l = k + 6;
-		Tessellator tessellator = Tessellator.instance;
+
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.INTERFACE);
+		GLRenderer.setColor4f(1, 1, 1, 1);
+
 		this.minecraft.textureManager.bindTexture(this.minecraft.textureManager.loadTexture("/gui/background.png"));
-		GL11.glColor4f(1f, 1f, 1f, 1f);
-		float g = 32.0F;
-		tessellator.startDrawingQuads();
-		tessellator.setColorOpaque(32, 32, 32);
-		tessellator.addVertexWithUV(this.left, this.bottom, 0.0D, (float)this.left / 32.0F, (float)(this.bottom + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.addVertexWithUV(this.right, this.bottom, 0.0D, (float)this.right / 32.0F, (float)(this.bottom + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.addVertexWithUV(this.right, this.top, 0.0D, (float)this.right / 32.0F, (float)(this.top + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.addVertexWithUV(this.left, this.top, 0.0D, (float)this.left / 32.0F, (float)(this.top + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.draw();
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
+		t.startDrawingQuads();
+		t.setColorOpaque3i(32, 32, 32);
+		t.addVertexWithUV(this.left, this.bottom, 0.0D, (float)this.left / 32.0F, (float)(this.bottom + (int)this.getScrollAmount()) / 32.0F);
+		t.addVertexWithUV(this.right, this.bottom, 0.0D, (float)this.right / 32.0F, (float)(this.bottom + (int)this.getScrollAmount()) / 32.0F);
+		t.addVertexWithUV(this.right, this.top, 0.0D, (float)this.right / 32.0F, (float)(this.top + (int)this.getScrollAmount()) / 32.0F);
+		t.addVertexWithUV(this.left, this.top, 0.0D, (float)this.left / 32.0F, (float)(this.top + (int)this.getScrollAmount()) / 32.0F);
+		t.draw();
+
 		int m = this.getRowLeft();
 		int n = this.top + 4 - (int)this.getScrollAmount();
 		if (this.renderHeader) {
-			this.renderHeader(m, n, tessellator);
+			this.renderHeader(m, n);
 		}
 
 		this.renderList(m, n, i, j, f);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
+
+		GLRenderer.disableState(State.DEPTH_TEST);
 		this.renderHoleBackground(0, this.top, 255, 255);
 		this.renderHoleBackground(this.bottom, this.height, 255, 255);
-		GL11.glEnable(GL11.GL_BLEND);
+
+		GLRenderer.enableState(State.BLEND);
 		GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ZERO, GL11.GL_ONE);
-		GL11.glDisable(GL11.GL_ALPHA_TEST);
-		GL11.glShadeModel(GL11.GL_SMOOTH);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
+
+		//Switch to color shader for scroll bars
+		GLRenderer.setShader(Shaders.COLOR);
+
+		GLRenderer.setAlphaTest(-1);
+		//GL11.glShadeModel(GL11.GL_SMOOTH);
 		boolean o = true;
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA(0, 0, 0, 0);
-		tessellator.addVertexWithUV(this.left, this.top + 4, 0.0D, 0.0F, 1.0F);
-		tessellator.addVertexWithUV(this.right, this.top + 4, 0.0D, 1.0F, 1.0F);
-		tessellator.setColorOpaque(0, 0, 0);
-		tessellator.addVertexWithUV(this.right, this.top, 0.0D, 1.0F, 0.0F);
-		tessellator.addVertexWithUV(this.left, this.top, 0.0D, 0.0F, 0.0F);
-		tessellator.draw();
-		tessellator.startDrawingQuads();
-		tessellator.setColorOpaque(0, 0, 0);
-		tessellator.addVertexWithUV(this.left, this.bottom, 0.0D, 0.0F, 1.0F);
-		tessellator.addVertexWithUV(this.right, this.bottom, 0.0D, 1.0F, 1.0F);
-		tessellator.setColorRGBA(0, 0, 0, 0);
-		tessellator.addVertexWithUV(this.right, this.bottom - 4, 0.0D, 1.0F, 0.0F);
-		tessellator.addVertexWithUV(this.left, this.bottom - 4, 0.0D, 0.0F, 0.0F);
-		tessellator.draw();
+		t.startDrawingQuads();
+		t.setColor4f(0, 0, 0, 0);
+		t.addVertexWithUV(this.left, this.top + 4, 0.0D, 0.0F, 1.0F);
+		t.addVertexWithUV(this.right, this.top + 4, 0.0D, 1.0F, 1.0F);
+		t.setColorOpaque3i(0, 0, 0);
+		t.addVertexWithUV(this.right, this.top, 0.0D, 1.0F, 0.0F);
+		t.addVertexWithUV(this.left, this.top, 0.0D, 0.0F, 0.0F);
+		t.draw();
+		t.startDrawingQuads();
+		t.setColorOpaque3i(0, 0, 0);
+		t.addVertexWithUV(this.left, this.bottom, 0.0D, 0.0F, 1.0F);
+		t.addVertexWithUV(this.right, this.bottom, 0.0D, 1.0F, 1.0F);
+		t.setColor4f(0, 0, 0, 0);
+		t.addVertexWithUV(this.right, this.bottom - 4, 0.0D, 1.0F, 0.0F);
+		t.addVertexWithUV(this.left, this.bottom - 4, 0.0D, 0.0F, 0.0F);
+		t.draw();
 		int p = this.getMaxScroll();
 		if (p > 0) {
 			int q = (int)((float)((this.bottom - this.top) * (this.bottom - this.top)) / (float)this.getMaxPosition());
@@ -224,35 +238,37 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 				r = this.top;
 			}
 
-			tessellator.startDrawingQuads();
-			tessellator.setColorOpaque(0, 0, 0);
-			tessellator.addVertexWithUV(k, this.bottom, 0.0D, 0.0F, 1.0F);
-			tessellator.addVertexWithUV(l, this.bottom, 0.0D, 1.0F, 1.0F);
-			tessellator.addVertexWithUV(l, this.top, 0.0D, 1.0F, 0.0F);
-			tessellator.addVertexWithUV(k, this.top, 0.0D, 0.0F, 0.0F);
-			tessellator.draw();
-			tessellator.startDrawingQuads();
-			tessellator.setColorOpaque(128, 128, 128);
-			tessellator.addVertexWithUV(k, r + q, 0.0D, 0.0F, 1.0F);
-			tessellator.addVertexWithUV(l, r + q, 0.0D, 1.0F, 1.0F);
-			tessellator.addVertexWithUV(l, r, 0.0D, 1.0F, 0.0F);
-			tessellator.addVertexWithUV(k, r, 0.0D, 0.0F, 0.0F);
-			tessellator.draw();
-			tessellator.startDrawingQuads();
-			tessellator.setColorOpaque(192, 192, 192);
-			tessellator.addVertexWithUV(k, r + q - 1, 0.0D, 0.0F, 1.0F);
-			tessellator.addVertexWithUV(l - 1, r + q - 1, 0.0D, 1.0F, 1.0F);
-			tessellator.addVertexWithUV(l - 1, r, 0.0D, 1.0F, 0.0F);
-			tessellator.addVertexWithUV(k, r, 0.0D, 0.0F, 0.0F);
-			tessellator.draw();
+			t.startDrawingQuads();
+			t.setColorOpaque3i(0, 0, 0);
+			t.addVertexWithUV(k, this.bottom, 0.0D, 0.0F, 1.0F);
+			t.addVertexWithUV(l, this.bottom, 0.0D, 1.0F, 1.0F);
+			t.addVertexWithUV(l, this.top, 0.0D, 1.0F, 0.0F);
+			t.addVertexWithUV(k, this.top, 0.0D, 0.0F, 0.0F);
+			t.draw();
+			t.startDrawingQuads();
+			t.setColorOpaque3i(128, 128, 128);
+			t.addVertexWithUV(k, r + q, 0.0D, 0.0F, 1.0F);
+			t.addVertexWithUV(l, r + q, 0.0D, 1.0F, 1.0F);
+			t.addVertexWithUV(l, r, 0.0D, 1.0F, 0.0F);
+			t.addVertexWithUV(k, r, 0.0D, 0.0F, 0.0F);
+			t.draw();
+			t.startDrawingQuads();
+			t.setColorOpaque3i(192, 192, 192);
+			t.addVertexWithUV(k, r + q - 1, 0.0D, 0.0F, 1.0F);
+			t.addVertexWithUV(l - 1, r + q - 1, 0.0D, 1.0F, 1.0F);
+			t.addVertexWithUV(l - 1, r, 0.0D, 1.0F, 0.0F);
+			t.addVertexWithUV(k, r, 0.0D, 0.0F, 0.0F);
+			t.draw();
 		}
 
 		this.renderDecorations(i, j);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		/*GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glShadeModel(GL11.GL_FLAT);
 		GL11.glEnable(GL11.GL_ALPHA_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);*/
+
+		GLRenderer.popFrame();
 	}
 
 	protected void centerScrollOn(E entry) {
@@ -388,7 +404,11 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 
 	protected void renderList(int i, int j, int k, int l, float f) {
 		int m = this.getItemCount();
-		Tessellator tessellator = Tessellator.instance;
+
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.COLOR);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
 
 		for(int n = 0; n < m; ++n) {
 			int o = this.getRowTop(n);
@@ -402,29 +422,33 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 				if (this.renderSelection && this.isSelectedItem(n)) {
 					v = this.left + this.width / 2 - s / 2;
 					int u = this.left + this.width / 2 + s / 2;
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
+					//GL11.glDisable(GL11.GL_TEXTURE_2D);
 					float g = this.isFocused() ? 1.0F : 0.5F;
-					GL11.glColor4f(g, g, g, 1f);
-					tessellator.startDrawingQuads();
-					tessellator.addVertex(v, q + r + 2, 0.0D);
-					tessellator.addVertex(u, q + r + 2, 0.0D);
-					tessellator.addVertex(u, q - 2, 0.0D);
-					tessellator.addVertex(v, q - 2, 0.0D);
-					tessellator.draw();
-					GL11.glColor4f(0f, 0f, 0f, 1f);
-					tessellator.startDrawingQuads();
-					tessellator.addVertex(v + 1, q + r + 1, 0.0D);
-					tessellator.addVertex(u - 1, q + r + 1, 0.0D);
-					tessellator.addVertex(u - 1, q - 1, 0.0D);
-					tessellator.addVertex(v + 1, q - 1, 0.0D);
-					tessellator.draw();
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
+					//GL11.glColor4f(g, g, g, 1f);
+					t.startDrawingQuads();
+					t.setColor4f(g, g, g, 1);
+					t.addVertex(v, q + r + 2, 0.0D);
+					t.addVertex(u, q + r + 2, 0.0D);
+					t.addVertex(u, q - 2, 0.0D);
+					t.addVertex(v, q - 2, 0.0D);
+					t.draw();
+					//GL11.glColor4f(0f, 0f, 0f, 1f);
+					t.startDrawingQuads();
+					t.setColor4f(0, 0, 0, 1);
+					t.addVertex(v + 1, q + r + 1, 0.0D);
+					t.addVertex(u - 1, q + r + 1, 0.0D);
+					t.addVertex(u - 1, q - 1, 0.0D);
+					t.addVertex(v + 1, q - 1, 0.0D);
+					t.draw();
+					//GL11.glEnable(GL11.GL_TEXTURE_2D);
 				}
 
 				v = this.getRowLeft();
 				entry.render(n, o, v, s, r, k, l, this.isMouseOver(k, l) && Objects.equals(this.getEntryAtPosition(k, l), entry), f);
 			}
 		}
+
+		GLRenderer.popFrame();
 
 	}
 
@@ -445,18 +469,25 @@ public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extend
 	}
 
 	protected void renderHoleBackground(int i, int j, int k, int l) {
-		Tessellator tessellator = Tessellator.instance;
+
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.INTERFACE);
+		GLRenderer.setColor4f(1, 1, 1, 1);
+
 		this.minecraft.textureManager.bindTexture(this.minecraft.textureManager.loadTexture("/gui/background.png"));
-		GL11.glColor4f(1f, 1f, 1f, 1f);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
 		float f = 32.0F;
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA(64, 64, 64, l);
-		tessellator.addVertexWithUV(this.left, j, 0.0D, 0.0F, (float)j / 32.0F);
-		tessellator.addVertexWithUV(this.left + this.width, j, 0.0D, (float)this.width / 32.0F, (float)j / 32.0F);
-		tessellator.setColorRGBA(64, 64, 64, k);
-		tessellator.addVertexWithUV(this.left + this.width, i, 0.0D, (float)this.width / 32.0F, (float)i / 32.0F);
-		tessellator.addVertexWithUV(this.left, i, 0.0D, 0.0F, (float)i / 32.0F);
-		tessellator.draw();
+		t.startDrawingQuads();
+		t.setColor4i(64, 64, 64, l);
+		t.addVertexWithUV(this.left, j, 0.0D, 0.0F, (float)j / 32.0F);
+		t.addVertexWithUV(this.left + this.width, j, 0.0D, (float)this.width / 32.0F, (float)j / 32.0F);
+		t.setColor4i(64, 64, 64, k);
+		t.addVertexWithUV(this.left + this.width, i, 0.0D, (float)this.width / 32.0F, (float)i / 32.0F);
+		t.addVertexWithUV(this.left, i, 0.0D, 0.0F, (float)i / 32.0F);
+		t.draw();
+
+		GLRenderer.popFrame();
 	}
 
 	protected E remove(int i) {

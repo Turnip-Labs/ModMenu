@@ -4,7 +4,7 @@ package io.github.prospector.modmenu.util;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.Screen;
-import net.minecraft.client.render.Font;
+import net.minecraft.client.render.font.FontRenderer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,7 +16,7 @@ public final class RenderUtils extends Screen {
 	public static final RenderUtils INSTANCE = new RenderUtils();
 	private RenderUtils() {}
 
-	public List<String> wrapStringToWidthAsList(Font font, String text, int width) {
+	public List<String> wrapStringToWidthAsList(FontRenderer font, String text, int width) {
 		List<String> words = new ArrayList<>();
 		if (text != null)
 			Collections.addAll(words, text.split(" "));
@@ -26,7 +26,7 @@ public final class RenderUtils extends Screen {
 		while (!words.isEmpty()) {
 			String nextWord = words.remove(0);
 			String next = current.isEmpty() ? nextWord : current + " " + nextWord;
-			if (font.getStringWidth(next) > width) {
+			if (font.stringWidth(next) > width) {
 				strings.add(current);
 				current = nextWord;
 			} else {
@@ -40,11 +40,11 @@ public final class RenderUtils extends Screen {
 		return strings;
 	}
 
-	public void drawWrappedString(Font font, String string, int x, int y, int wrapWidth, int lines, int color) {
+	public void drawWrappedString(Screen screen, String string, int x, int y, int wrapWidth, int lines, int color) {
 		while (string != null && string.endsWith("\n")) {
 			string = string.substring(0, string.length() - 1);
 		}
-		List<String> strings = wrapStringToWidthAsList(font, string, wrapWidth);
+		List<String> strings = wrapStringToWidthAsList(screen.fontRenderer, string, wrapWidth);
 
 		for (int i = 0; i < strings.size(); i++) {
 			if (i >= lines) {
@@ -55,16 +55,17 @@ public final class RenderUtils extends Screen {
 				line += "...";
 			}
 			int x1 = x;
-			font.drawString(line, x1, y + i * 9, color);
+			screen.drawStringNoShadow(screen.fontRenderer, line, x1, y + i * 9, color);
 		}
 	}
 
-	public void drawBadge(Font font, int x, int y, int tagWidth, String text, int outlineColor, int fillColor, int textColor) {
+	public void drawBadge(Screen screen, int x, int y, int tagWidth, String text, int outlineColor, int fillColor, int textColor) {
+		//TODO screen param might be pointless since RenderUtils is also a screen?
 		drawRect(x + 1, y - 1, x + tagWidth, y, outlineColor);
         drawRect(x, y, x + 1, y + 9, outlineColor);
         drawRect(x + 1, y + 1 + 9 - 1, x + tagWidth, y + 9 + 1, outlineColor);
         drawRect(x + tagWidth, y, x + tagWidth + 1, y + 9, outlineColor);
         drawRect(x + 1, y, x + tagWidth, y + 9, fillColor);
-		font.drawString(text, (x + 1 + (tagWidth - font.getStringWidth(text)) / 2), y + 1, textColor);
+		screen.drawStringNoShadow(screen.fontRenderer, text, (x + 1 + (tagWidth - screen.fontRenderer.stringWidth(text)) / 2), y + 1, textColor);
 	}
 }

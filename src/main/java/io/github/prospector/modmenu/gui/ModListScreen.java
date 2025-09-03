@@ -14,8 +14,12 @@ import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ButtonElement;
 import net.minecraft.client.gui.Screen;
-import net.minecraft.client.render.Font;
+import net.minecraft.client.render.font.FontRenderer;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.renderer.State;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.Global;
 import net.minecraft.core.lang.I18n;
 import org.lwjgl.Sys;
@@ -24,6 +28,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL41;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.include.com.google.common.base.Joiner;
@@ -96,7 +101,7 @@ public class ModListScreen extends Screen {
 	public void init() {
 		I18n i18n = I18n.getInstance();
 		Keyboard.enableRepeatEvents(true);
-		Font font = this.font;
+		FontRenderer font = this.fontRenderer;
 		paneY = 48;
 		paneWidth = this.width / 2 - 8;
 		rightPaneX = width - paneWidth;
@@ -104,7 +109,7 @@ public class ModListScreen extends Screen {
 		int searchBoxWidth = paneWidth - 32 - 22;
 		searchBoxX = paneWidth / 2 - searchBoxWidth / 2 - 22 / 2;
 		String oldText = this.searchBox == null ? "" : this.searchBox.getText();
-		this.searchBox = new TextFieldWidget(this.font, searchBoxX, 22, searchBoxWidth, 20, i18n.translateKey("modmenu.search")); // field_6451_g
+		this.searchBox = new TextFieldWidget(searchBoxX, 22, searchBoxWidth, 20, i18n.translateKey("modmenu.search")); // field_6451_g
 		this.searchBox.setText(oldText);
 		this.modList = new ModListWidget(this.mc, paneWidth, this.height, paneY + 19, this.height - 36, 36, this.searchBox.getText(), this.modList, this);
 		this.modList.setLeftPos(0);
@@ -121,8 +126,11 @@ public class ModListScreen extends Screen {
 					enabled = false;
 				}
 				visible = enabled; // visible = enabled
-				GL11.glColor4f(1f, 1f, 1f, 1f);
+
+				int prevColor = GLRenderer.getColor();
+				GLRenderer.setColor4f(1, 1, 1, 1);
 				super.render(mc, mouseX, mouseY);
+				GLRenderer.setColor1i(prevColor);
 			}
 		};
 		int urlButtonWidths = paneWidth / 2 - 2;
@@ -154,11 +162,11 @@ public class ModListScreen extends Screen {
 		});
 		String showLibrariesText = i18n.translateKeyAndFormat("modmenu.showLibraries", i18n.translateKey("modmenu.showLibraries." + ModMenuConfigManager.getConfig().showLibraries()));
 		String sortingText = i18n.translateKeyAndFormat("modmenu.sorting", ModMenuConfigManager.getConfig().getSorting().getName());
-		int showLibrariesWidth = font.getStringWidth(showLibrariesText) + 20;
-		int sortingWidth = font.getStringWidth(sortingText) + 20;
+		int showLibrariesWidth = fontRenderer.stringWidth(showLibrariesText) + 20;
+		int sortingWidth = fontRenderer.stringWidth(sortingText) + 20;
 		int filtersX;
 		int filtersWidth = showLibrariesWidth + sortingWidth + 2;
-		if ((filtersWidth + font.getStringWidth(i18n.translateKeyAndFormat("modmenu.showingMods", NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()))) + 20) >= searchBoxX + searchBoxWidth + 22) {
+		if ((filtersWidth + fontRenderer.stringWidth(i18n.translateKeyAndFormat("modmenu.showingMods", NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()))) + 20) >= searchBoxX + searchBoxWidth + 22) {
 			filtersX = paneWidth / 2 - filtersWidth / 2;
 			showModCount = false;
 		} else {
@@ -285,7 +293,7 @@ public class ModListScreen extends Screen {
 				descriptionListWidget.mouseDragged(mouseX, mouseY, button, mouseDX, mouseDY);
 			}
 		}
-		Font font = this.font;
+		FontRenderer font = this.fontRenderer;
 		if (!searchBox.getText().equals(lastSearchString)) {
 			lastSearchString = searchBox.getText();
 			modList.filter(lastSearchString, false);
@@ -298,17 +306,23 @@ public class ModListScreen extends Screen {
 		}
 		this.modList.render(mouseX, mouseY, delta);
 		this.searchBox.drawTextBox();
-		GL11.glDisable(GL11.GL_BLEND);
-		this.drawStringCentered(font, this.textTitle, this.modList.getWidth() / 2, 8, 0xffffff);
+
+		GLRenderer.pushFrame(); // FIXME can't query states, a push here is probably not ideal
+		GLRenderer.disableState(State.BLEND);
+
+		this.drawStringCenteredNoShadow(font, this.textTitle, this.modList.getWidth() / 2, 8, 0xffffff);
 		super.render(mouseX, mouseY, delta);
 		if (showModCount || !filterOptionsShown) {
 			String showModCountString = i18n.translateKeyAndFormat("modmenu.showingMods", NumberFormat.getInstance().format(modList.getDisplayedCount()) + "/" + NumberFormat.getInstance().format(FabricLoader.getInstance().getAllMods().size()));
-			font.drawString(showModCountString, searchBoxX, 52, 0xFFFFFF);
+			this.drawStringNoShadow(font, showModCountString, searchBoxX, 52, 0xFFFFFF);
 		}
 		if (selectedEntry != null) {
 			ModMetadata metadata = selectedEntry.getMetadata();
 			int x = rightPaneX;
-			GL11.glColor4f(1f, 1f, 1f, 1f);
+
+			int prevColor = GLRenderer.getColor();
+			GLRenderer.setColor4f(1, 1, 1, 1);
+
 			this.selected.bindIconTexture();
             ModListEntry.internalRender(paneY, x);
             int lineSpacing = 9 + 1;
@@ -321,12 +335,12 @@ public class ModListScreen extends Screen {
 			String trimmedName = name;
 			int maxNameWidth = this.width - (x + imageOffset);
             trimmedName = getString(font, name, trimmedName, maxNameWidth);
-            font.drawString(trimmedName, x + imageOffset, paneY + 1, 0xFFFFFF);
-			if (mouseX > x + imageOffset && mouseY > paneY + 1 && mouseY < paneY + 1 + 9 && mouseX < x + imageOffset + font.getStringWidth(trimmedName)) {
+            this.drawStringNoShadow(font, trimmedName, x + imageOffset, paneY + 1, 0xFFFFFF);
+			if (mouseX > x + imageOffset && mouseY > paneY + 1 && mouseY < paneY + 1 + 9 && mouseX < x + imageOffset + fontRenderer.stringWidth(trimmedName)) {
 				setTooltip(i18n.translateKeyAndFormat("modmenu.modIdToolTip", metadata.getId()));
 			}
 			if (init || badgeRenderer == null || badgeRenderer.getMetadata() != metadata) {
-				badgeRenderer = new BadgeRenderer(mc, x + imageOffset + font.getStringWidth(trimmedName) + 2, paneY, width - 28, selectedEntry.container, this);
+				badgeRenderer = new BadgeRenderer(mc, x + imageOffset + fontRenderer.stringWidth(trimmedName) + 2, paneY, width - 28, selectedEntry.container, this);
 				init = false;
 			}
 			badgeRenderer.draw(mouseX, mouseY);
@@ -336,7 +350,7 @@ public class ModListScreen extends Screen {
 			} else {
 				versionString = metadata.getVersion().getFriendlyString();
 			}
-			font.drawString("v" + versionString, x + imageOffset, paneY + 2 + lineSpacing, 0x808080);
+			this.drawStringNoShadow(font, "v" + versionString, x + imageOffset, paneY + 2 + lineSpacing, 0x808080);
 			String authors;
 			List<String> names = new ArrayList<>();
 
@@ -352,19 +366,23 @@ public class ModListScreen extends Screen {
 				} else {
 					authors = names.get(0);
 				}
-				RenderUtils.INSTANCE.drawWrappedString(font, i18n.translateKeyAndFormat("modmenu.authorPrefix", authors), x + imageOffset, paneY + 2 + lineSpacing * 2, paneWidth - imageOffset - 4, 1, 0x808080);
+				RenderUtils.INSTANCE.drawWrappedString(this, i18n.translateKeyAndFormat("modmenu.authorPrefix", authors), x + imageOffset, paneY + 2 + lineSpacing * 2, paneWidth - imageOffset - 4, 1, 0x808080);
 			}
 			if (this.tooltip != null) {
 				this.renderTooltip(Lists.newArrayList(Splitter.on("\n").split(this.tooltip)), mouseX, mouseY);
 			}
+
+			GLRenderer.setColor1i(prevColor);
 		}
+
+		GLRenderer.popFrame();
 	}
 
-    static String getString(Font font, String name, String trimmedName, int maxNameWidth) {
-        if (font.getStringWidth(name) > maxNameWidth) {
-            int maxWidth = maxNameWidth - font.getStringWidth("...");
+    static String getString(FontRenderer fontRenderer, String name, String trimmedName, int maxNameWidth) {
+        if (fontRenderer.stringWidth(name) > maxNameWidth) {
+            int maxWidth = maxNameWidth - fontRenderer.stringWidth("...");
             trimmedName = "";
-            while (font.getStringWidth(trimmedName) < maxWidth && trimmedName.length() < name.length()) {
+            while (fontRenderer.stringWidth(trimmedName) < maxWidth && trimmedName.length() < name.length()) {
                 trimmedName += name.charAt(trimmedName.length());
             }
             trimmedName = trimmedName.isEmpty() ? "..." : trimmedName.substring(0, trimmedName.length() - 1) + "...";
@@ -373,17 +391,24 @@ public class ModListScreen extends Screen {
     }
 
     public void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
-		Tessellator tessellator = Tessellator.instance;
-		mc.textureManager.bindTexture(mc.textureManager.loadTexture("/gui/background.png"));
-		GL11.glColor4f(1f, 1f, 1f, 1f);
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA(red, green, blue, endAlpha);
-		tessellator.addVertexWithUV(x1, y2, 0.0D, x1 / 32.0F, y2 / 32.0F);
-		tessellator.addVertexWithUV(x2, y2, 0.0D, x2 / 32.0F, y2 / 32.0F);
-		tessellator.setColorRGBA(red, green, blue, startAlpha);
-		tessellator.addVertexWithUV(x2, y1, 0.0D, x2 / 32.0F, y1 / 32.0F);
-		tessellator.addVertexWithUV(x1, y1, 0.0D, x1 / 32.0F, y1 / 32.0F);
-		tessellator.draw();
+
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.INTERFACE);
+		GLRenderer.setColor4f(1, 1, 1, 1);
+
+		mc.textureManager.loadTexture("/gui/background.png").bind();
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
+		t.startDrawingQuads();
+		t.setColor4i(red, green, blue, endAlpha);
+		t.addVertexWithUV(x1, y2, 0.0D, x1 / 32.0F, y2 / 32.0F);
+		t.addVertexWithUV(x2, y2, 0.0D, x2 / 32.0F, y2 / 32.0F);
+		t.setColor4i(red, green, blue, startAlpha);
+		t.addVertexWithUV(x2, y1, 0.0D, x2 / 32.0F, y1 / 32.0F);
+		t.addVertexWithUV(x1, y1, 0.0D, x1 / 32.0F, y1 / 32.0F);
+		t.draw();
+
+		GLRenderer.popFrame();
 	}
 
 	@Override
@@ -424,14 +449,14 @@ public class ModListScreen extends Screen {
 
 	public void renderTooltip(List<String> list, int i, int j) {
 		if (!list.isEmpty()) {
-			Font font = this.font;
+			FontRenderer font = this.fontRenderer;
 
-			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			GLRenderer.pushFrame();
+			GLRenderer.disableState(State.DEPTH_TEST);
 			int k = 0;
 
 			for (String string : list) {
-				int l = font.getStringWidth(string);
+				int l = fontRenderer.stringWidth(string);
 				if (l > k) {
 					k = l;
 				}
@@ -456,13 +481,14 @@ public class ModListScreen extends Screen {
 			int margin = 3;
 			this.fillGradient(m - margin, n - margin, m + k + margin,
 					n + p + margin, transparentGrey, transparentGrey);
-			GL11.glPushMatrix();
-			GL11.glTranslatef(0, 0, 300);
+
+
+			GLRenderer.modelM4f().translate(0, 0, 300);
 
 			for(int t = 0; t < list.size(); ++t) {
 				String string2 = list.get(t);
 				if (string2 != null) {
-					font.drawString(string2, m, n, 0xffffff);
+					this.drawStringNoShadow(fontRenderer, string2, m, n, 0xffffff);
 				}
 
 				if (t == 0) {
@@ -472,9 +498,11 @@ public class ModListScreen extends Screen {
 				n += 10;
 			}
 
-			GL11.glPopMatrix();
-			GL11.glEnable(GL11.GL_DEPTH_TEST);
-			GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+			GLRenderer.popFrame();
+
+			//FIXME is this trailing state change needed?
+			//GL11.glEnable(GL11.GL_DEPTH_TEST);
+			//GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 		}
 	}
 
@@ -487,23 +515,26 @@ public class ModListScreen extends Screen {
 		float q = (float)(n >> 16 & 255) / 255.0F;
 		float r = (float)(n >> 8 & 255) / 255.0F;
 		float s = (float)(n & 255) / 255.0F;
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glDisable(GL11.GL_ALPHA_TEST);
-		GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
-		GL11.glShadeModel(GL11.GL_SMOOTH);
-		Tessellator tessellator = Tessellator.instance;
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA_F(g, h, o, f);
-		tessellator.addVertex(k, j, 300);
-		tessellator.addVertex(i, j, 300);
-		tessellator.setColorRGBA_F(q, r, s, p);
-		tessellator.addVertex(i, l, 300);
-		tessellator.addVertex(k, l, 300);
-		tessellator.draw();
-		GL11.glShadeModel(GL11.GL_FLAT);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_ALPHA_TEST);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.COLOR);
+		GLRenderer.enableState(State.BLEND);
+		// I don't think this has an equivalent in GLRenderer? (2025-09-01)
+		GL41.glBlendFuncSeparate(GL41.GL_SRC_ALPHA, GL41.GL_ONE_MINUS_SRC_ALPHA, GL41.GL_ONE, GL41.GL_ZERO);
+		// Attribute interpolation is controlled by shaders, likely not needed since the default is smooth
+		//GL41.glShadeModel(GL11.GL_SMOOTH);
+		GLRenderer.setAlphaTest(0);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
+		t.startDrawingQuads();
+		t.setColor4f(g, h, o, f);
+		t.addVertex(k, j, 300);
+		t.addVertex(i, j, 300);
+		t.setColor4f(q, r, s, p);
+		t.addVertex(i, l, 300);
+		t.addVertex(k, l, 300);
+		t.draw();
+
+		//GL41.glShadeModel(GL11.GL_FLAT);
+		GLRenderer.popFrame();
 	}
 }

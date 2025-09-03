@@ -6,19 +6,23 @@ import io.github.prospector.modmenu.mixin.TextFieldEditorAccessor;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.client.gui.text.ITextField;
 import net.minecraft.client.gui.text.TextFieldEditor;
-import net.minecraft.client.render.Font;
+import net.minecraft.client.render.font.FontRenderer;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.shader.Shader;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.enums.EnumOS;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL41;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.function.Predicate;
 
 public class TextFieldWidget extends Screen implements ITextField {
-	private final Font font;
 	private final TextFieldEditor handler;
 	public int x;
 	public int y;
@@ -68,8 +72,7 @@ public class TextFieldWidget extends Screen implements ITextField {
 
 	private final @Nullable String emptyText;
 
-	public TextFieldWidget(Font font, int x, int y, int width, int height, String emptyText) {
-		this.font = font;
+	public TextFieldWidget(int x, int y, int width, int height, String emptyText) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -79,7 +82,7 @@ public class TextFieldWidget extends Screen implements ITextField {
 	}
 
 	public TextFieldWidget(Font font, int x, int y, int width, int height) {
-		this(font, x, y, width, height, null);
+		this(x, y, width, height, null);
 	}
 
 	/**
@@ -428,8 +431,8 @@ public class TextFieldWidget extends Screen implements ITextField {
 				i -= 4;
 			}
 
-			String s = trimStringToWidth(font, text.substring(lineScrollOffset), getWidth());
-			setCursorPosition(trimStringToWidth(font, s, i).length() + lineScrollOffset);
+			String s = trimStringToWidth(fontRenderer, text.substring(lineScrollOffset), getWidth());
+			setCursorPosition(trimStringToWidth(fontRenderer, s, i).length() + lineScrollOffset);
 			//return true;
 		} else {
 			//return false;
@@ -449,7 +452,7 @@ public class TextFieldWidget extends Screen implements ITextField {
 			int i = isEnabled ? enabledColor : disabledColor;
 			int j = cursorPosition - lineScrollOffset;
 			int k = selectionEnd - lineScrollOffset;
-			String s = trimStringToWidth(font, text.substring(lineScrollOffset), getWidth());
+			String s = trimStringToWidth(fontRenderer, text.substring(lineScrollOffset), getWidth());
 			boolean flag = j >= 0 && j <= s.length();
 			boolean flag1 = isFocused && cursorCounter / 6 % 2 == 0 && flag;
 			int l = enableBackgroundDrawing ? x + 4 : x;
@@ -462,10 +465,10 @@ public class TextFieldWidget extends Screen implements ITextField {
 
 			if (!s.isEmpty()) {
 				String s1 = flag ? s.substring(0, j) : s;
-				font.drawStringWithShadow(s1, l, i1, i);
-				j1 += font.getStringWidth(s1) + 1;
+				this.drawStringShadow(fontRenderer, s1, l, i1, i);
+				j1 += fontRenderer.stringWidth(s1) + 1;
 			} else if (emptyText != null && !this.isFocused) {
-				font.drawStringWithShadow(emptyText, l, i1, 6250335);
+				this.drawStringShadow(fontRenderer, emptyText, l, i1, 6250335);
 			}
 
 			boolean flag2 = cursorPosition < text.length() || text.length() >= getMaxStringLength();
@@ -479,7 +482,7 @@ public class TextFieldWidget extends Screen implements ITextField {
 			}
 
 			if (!s.isEmpty() && flag && j < s.length()) {
-				font.drawStringWithShadow(s.substring(j), j1, i1, i);
+				this.drawStringShadow(fontRenderer, s.substring(j), j1, i1, i);
 				//j1 += this.font.getStringWidth(s.substring(j));
 			}
 
@@ -487,12 +490,12 @@ public class TextFieldWidget extends Screen implements ITextField {
 				if (flag2) {
 					drawRect(k1, i1 - 1, k1 + 1, i1 + 1 + 9, 0xffd0d0d0);
 				} else {
-					font.drawStringWithShadow("_", k1, i1, i);
+					this.drawStringShadow(fontRenderer, "_", k1, i1, i);
 				}
 			}
 
 			if (k != j) {
-				int l1 = l + font.getStringWidth(s.substring(0, k));
+				int l1 = l + fontRenderer.stringWidth(s.substring(0, k));
 				drawSelectionBox(k1, i1 - 1, l1 - 1, i1 + 1 + 9);
 			}
 		}
@@ -522,19 +525,25 @@ public class TextFieldWidget extends Screen implements ITextField {
 			startX = x + width;
 		}
 
-		Tessellator tessellator = Tessellator.instance;
-		GL11.glColor4f(0f, 0f, 255f, 255f);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		GL11.glEnable(GL11.GL_COLOR_LOGIC_OP);
-		GL11.glLogicOp(GL11.GL_OR_REVERSE);
-		tessellator.startDrawingQuads();
-		tessellator.addVertex(startX, endY, 0.0D);
-		tessellator.addVertex(endX, endY, 0.0D);
-		tessellator.addVertex(endX, startY, 0.0D);
-		tessellator.addVertex(startX, startY, 0.0D);
-		tessellator.draw();
-		GL11.glDisable(GL11.GL_COLOR_LOGIC_OP);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.COLOR);
+		//FIXME I don't think this makes sense anymore, probably breaks something
+		//GL41.glDisable(GL11.GL_TEXTURE_2D);
+		GL41.glEnable(GL11.GL_COLOR_LOGIC_OP);
+		GL41.glLogicOp(GL41.GL_OR_REVERSE);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
+		t.setColor4f(0, 0, 1, 1);
+		t.startDrawingQuads();
+		t.addVertex(startX, endY, 0.0D);
+		t.addVertex(endX, endY, 0.0D);
+		t.addVertex(endX, startY, 0.0D);
+		t.addVertex(startX, startY, 0.0D);
+		t.draw();
+
+		GL41.glDisable(GL11.GL_COLOR_LOGIC_OP);
+		//GL41.glEnable(GL11.GL_TEXTURE_2D);
+		GLRenderer.popFrame();
 	}
 
 	/**
@@ -647,31 +656,29 @@ public class TextFieldWidget extends Screen implements ITextField {
 
 		selectionEnd = position;
 
-		if (font != null) {
-			if (lineScrollOffset > i) {
-				lineScrollOffset = i;
-			}
+        if (lineScrollOffset > i) {
+            lineScrollOffset = i;
+        }
 
-			int j = getWidth();
-			String s = trimStringToWidth(font, text.substring(lineScrollOffset), j);
-			int k = s.length() + lineScrollOffset;
+        int j = getWidth();
+        String s = trimStringToWidth(fontRenderer, text.substring(lineScrollOffset), j);
+        int k = s.length() + lineScrollOffset;
 
-			if (position == lineScrollOffset) {
-				lineScrollOffset -= trimStringToWidth(font, text, j, true).length();
-			}
+        if (position == lineScrollOffset) {
+            lineScrollOffset -= trimStringToWidth(fontRenderer, text, j, true).length();
+        }
 
-			if (position > k) {
-				lineScrollOffset += position - k;
-			} else if (position <= lineScrollOffset) {
-				lineScrollOffset -= lineScrollOffset - position;
-			}
+        if (position > k) {
+            lineScrollOffset += position - k;
+        } else if (position <= lineScrollOffset) {
+            lineScrollOffset -= lineScrollOffset - position;
+        }
 
-			if (lineScrollOffset < 0)
-				lineScrollOffset = 0;
-			else if (lineScrollOffset > i)
-				lineScrollOffset = i;
-		}
-	}
+        if (lineScrollOffset < 0)
+            lineScrollOffset = 0;
+        else if (lineScrollOffset > i)
+            lineScrollOffset = i;
+    }
 
 	/**
 	 * Sets whether this text box loses focus when something other than it is clicked.
@@ -734,15 +741,15 @@ public class TextFieldWidget extends Screen implements ITextField {
 		}
 	}
 
-	private static String trimStringToWidth(Font font, String text, int maxWidth) {
+	private static String trimStringToWidth(FontRenderer font, String text, int maxWidth) {
 		return trimStringToWidth(font, text, maxWidth, false);
 	}
 
-	private static String trimStringToWidth(Font font, String text, int maxWidth, boolean reverse) {
+	private static String trimStringToWidth(FontRenderer font, String text, int maxWidth, boolean reverse) {
 		int width = 0;
 		int length;
 		for (length = 0; length < text.length() && width < maxWidth; length++)
-			width += font.getStringWidth(Character.toString(text.charAt(reverse ? text.length() - 1 - length : length)));
+			width += font.stringWidth(Character.toString(text.charAt(reverse ? text.length() - 1 - length : length)));
 		return reverse ? text.substring(text.length() - length) : text.substring(0, length);
 	}
 

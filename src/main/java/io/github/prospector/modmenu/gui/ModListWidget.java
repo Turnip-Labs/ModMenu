@@ -12,7 +12,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.util.helper.MathHelper;
 import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
@@ -180,7 +183,12 @@ public class ModListWidget extends AlwaysSelectedEntryListWidget<ModListEntry> i
 	@Override
 	protected void renderList(int x, int y, int mouseX, int mouseY, float delta) {
 		int itemCount = this.getItemCount();
-		Tessellator tessellator_1 = Tessellator.instance;
+
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.COLOR);
+		GLRenderer.setColor4f(0, 0, 0, 1);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
 
 		for (int index = 0; index < itemCount; ++index) {
 			int entryTop = this.getRowTop(index) + 2;
@@ -193,29 +201,31 @@ public class ModListWidget extends AlwaysSelectedEntryListWidget<ModListEntry> i
 				if (this.renderSelection && this.isSelectedItem(index)) {
 					entryLeft = getRowLeft() - 2 + entry.getXOffset();
 					int selectionRight = x + rowWidth + 2;
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
 					float float_2 = this.isFocused() ? 1.0F : 0.5F;
-					GL11.glColor4f(float_2, float_2, float_2, 1f);
-					tessellator_1.startDrawingQuads();
-					tessellator_1.addVertex((double) entryLeft, (double) (entryTop + entryHeight + 2), 0.0D);
-					tessellator_1.addVertex((double) selectionRight, (double) (entryTop + entryHeight + 2), 0.0D);
-					tessellator_1.addVertex((double) selectionRight, (double) (entryTop - 2), 0.0D);
-					tessellator_1.addVertex((double) entryLeft, (double) (entryTop - 2), 0.0D);
-					tessellator_1.draw();
-					GL11.glColor4f(0f, 0f, 0f, 1f);
-					tessellator_1.startDrawingQuads();
-					tessellator_1.addVertex((double) (entryLeft + 1), (double) (entryTop + entryHeight + 1), 0.0D);
-					tessellator_1.addVertex((double) (selectionRight - 1), (double) (entryTop + entryHeight + 1), 0.0D);
-					tessellator_1.addVertex((double) (selectionRight - 1), (double) (entryTop - 1), 0.0D);
-					tessellator_1.addVertex((double) (entryLeft + 1), (double) (entryTop - 1), 0.0D);
-					tessellator_1.draw();
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
+
+					GLRenderer.setColor4f(float_2, float_2, float_2, 1);
+					t.startDrawingQuads();
+					t.addVertex(entryLeft, entryTop + entryHeight + 2, 0.0D);
+					t.addVertex(selectionRight, entryTop + entryHeight + 2, 0.0D);
+					t.addVertex(selectionRight, entryTop - 2, 0.0D);
+					t.addVertex(entryLeft, entryTop - 2, 0.0D);
+					t.draw();
+
+					GLRenderer.setColor4f(0, 0, 0, 1);
+					t.startDrawingQuads();
+					t.addVertex(entryLeft + 1, entryTop + entryHeight + 1, 0.0D);
+					t.addVertex(selectionRight - 1, entryTop + entryHeight + 1, 0.0D);
+					t.addVertex(selectionRight - 1, entryTop - 1, 0.0D);
+					t.addVertex(entryLeft + 1, entryTop - 1, 0.0D);
+					t.draw();
 				}
 
 				entryLeft = this.getRowLeft();
 				entry.render(index, entryTop, entryLeft, rowWidth, entryHeight, mouseX, mouseY, this.isMouseOver((double) mouseX, (double) mouseY) && Objects.equals(this.getEntryAtPos((double) mouseX, (double) mouseY), entry), delta);
 			}
 		}
+
+		GLRenderer.popFrame();
 
 	}
 

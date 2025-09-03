@@ -9,8 +9,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.Font;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.font.FontRenderer;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.renderer.State;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +46,10 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
 	public void render(int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
 		x += getXOffset();
 		rowWidth -= getXOffset();
-		GL11.glColor4f(1f, 1f, 1f, 1f);
+
+		GLRenderer.pushFrame();
+
+		GLRenderer.setColor4f(1, 1, 1, 1); // We LOVE random color calls
 		this.bindIconTexture();
         internalRender(y, x);
 		String name = metadata.getName();
@@ -53,27 +59,33 @@ public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEnt
         name = HardcodedUtil.formatFabricModuleName(name);
 		String trimmedName = name;
 		int maxNameWidth = rowWidth - 32 - 3;
-		Font font = this.client.font;
-        trimmedName = ModListScreen.getString(font, name, trimmedName, maxNameWidth);
-        font.drawString(trimmedName, x + 32 + 3, y + 1, 0xFFFFFF);
-		new BadgeRenderer(client, x + 32 + 3 + font.getStringWidth(name) + 2, y, x + rowWidth, container, list.getParent()).draw(mouseX, mouseY);
+		FontRenderer font = this.fontRenderer;
+        trimmedName = ModListScreen.getString(fontRenderer, name, trimmedName, maxNameWidth);
+        this.drawStringNoShadow(font, trimmedName, x + 32 + 3, y + 1, 0xFFFFFF);
+		new BadgeRenderer(client, x + 32 + 3 + font.stringWidth(name) + 2, y, x + rowWidth, container, list.getParent()).draw(mouseX, mouseY);
 		String description = metadata.getDescription();
 		if (description.isEmpty() && HardcodedUtil.getHardcodedDescriptions().containsKey(metadata.getId())) {
 			description = HardcodedUtil.getHardcodedDescription(metadata.getId());
 		}
-		RenderUtils.INSTANCE.drawWrappedString(font, description, (x + 32 + 3 + 4), (y + 9 + 2), rowWidth - 32 - 7, 2, 0x808080);
+		RenderUtils.INSTANCE.drawWrappedString(this, description, (x + 32 + 3 + 4), (y + 9 + 2), rowWidth - 32 - 7, 2, 0x808080);
+
+		GLRenderer.popFrame();
 	}
 
     static void internalRender(int y, int x) {
-        GL11.glEnable(GL11.GL_BLEND);
-        Tessellator tess = Tessellator.instance;
-        tess.startDrawingQuads();
-        tess.addVertexWithUV(x, y, 0, 0, 0);
-        tess.addVertexWithUV(x, y + 32, 0, 0, 1);
-        tess.addVertexWithUV(x + 32, y + 32, 0, 1, 1);
-        tess.addVertexWithUV(x + 32, y, 0, 1, 0);
-        tess.draw();
-        GL11.glDisable(GL11.GL_BLEND);
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.INTERFACE);
+		GLRenderer.enableState(State.BLEND);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
+		t.startDrawingQuads();
+		t.addVertexWithUV(x, y, 0, 0, 0);
+		t.addVertexWithUV(x, y + 32, 0, 0, 1);
+		t.addVertexWithUV(x + 32, y + 32, 0, 1, 1);
+		t.addVertexWithUV(x + 32, y, 0, 1, 0);
+		t.draw();
+
+		GLRenderer.popFrame();
     }
 
     private BufferedImage createIcon() {

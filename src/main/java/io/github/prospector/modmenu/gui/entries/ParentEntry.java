@@ -7,10 +7,11 @@ import io.github.prospector.modmenu.gui.ModListWidget;
 import io.github.prospector.modmenu.util.ModListSearch;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.Font;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.font.FontRenderer;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,11 +32,11 @@ public class ParentEntry extends ModListEntry {
 	@Override
 	public void render(int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
 		super.render(index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
-		Font font = client.font;
+		FontRenderer font = this.fontRenderer;
 		int childrenBadgeHeight = 9;
 		int childrenBadgeWidth = 9;
 		int children = ModListSearch.search(list.getParent(), list.getParent().getSearchInput(), getChildren()).size();
-		int childrenWidth = font.getStringWidth(Integer.toString(children)) - 1;
+		int childrenWidth = font.stringWidth(Integer.toString(children)) - 1;
 		if (childrenBadgeWidth < childrenWidth + 4) {
 			childrenBadgeWidth = childrenWidth + 4;
 		}
@@ -48,21 +49,28 @@ public class ParentEntry extends ModListEntry {
 		drawRect(childrenBadgeX + childrenBadgeWidth - 1, childrenBadgeY + 1, childrenBadgeX + childrenBadgeWidth, childrenBadgeY + childrenBadgeHeight - 1, childrenOutlineColor);
 		drawRect(childrenBadgeX + 1, childrenBadgeY + 1, childrenBadgeX + childrenBadgeWidth - 1, childrenBadgeY + childrenBadgeHeight - 1, childrenFillColor);
 		drawRect(childrenBadgeX + 1, childrenBadgeY + childrenBadgeHeight - 1, childrenBadgeX + childrenBadgeWidth - 1, childrenBadgeY + childrenBadgeHeight, childrenOutlineColor);
-		font.drawString(Integer.toString(children), childrenBadgeX + childrenBadgeWidth / 2 - childrenWidth / 2, childrenBadgeY + 1, 0xCACACA);
+		this.drawStringNoShadow(font, Integer.toString(children), childrenBadgeX + childrenBadgeWidth / 2 - childrenWidth / 2, childrenBadgeY + 1, 0xCACACA);
 		this.hoveringIcon = mouseX >= x - 1 && mouseX <= x - 1 + 32 && mouseY >= y - 1 && mouseY <= y - 1 + 32;
 		if (isMouseOver(mouseX, mouseY)) {
 			drawRect(x, y, x + 32, y + 32, 0xA0909090);
-			this.client.textureManager.bindTexture(this.client.textureManager.loadTexture(PARENT_MOD_TEXTURE));
+
+			GLRenderer.pushFrame();
+			GLRenderer.setShader(Shaders.INTERFACE);
+			GLRenderer.setColor4f(1, 1, 1, 1);
+
 			int xOffset = list.getParent().showModChildren.contains(getMetadata().getId()) ? 32 : 0;
 			int yOffset = hoveringIcon ? 32 : 0;
-			GL11.glColor4f(1f, 1f, 1f, 1f);
-			Tessellator tess = Tessellator.instance;
-			tess.startDrawingQuads();
-			tess.addVertexWithUV(x, y, 0, xOffset / 256f, yOffset / 256f);
-			tess.addVertexWithUV(x, y + 32, 0, xOffset / 256f, (yOffset + 32) / 256f);
-			tess.addVertexWithUV(x + 32, y + 32, 0, (xOffset + 32) / 256f, (yOffset + 32) / 256f);
-			tess.addVertexWithUV(x + 32, y, 0, (xOffset + 32) / 256f, yOffset / 256f);
-			tess.draw();
+
+			this.client.textureManager.loadTexture(PARENT_MOD_TEXTURE).bind();
+			TessellatorGeneral t = GLRenderer.getTessellator();
+			t.startDrawingQuads();
+			t.addVertexWithUV(x, y, 0, xOffset / 256f, yOffset / 256f);
+			t.addVertexWithUV(x, y + 32, 0, xOffset / 256f, (yOffset + 32) / 256f);
+			t.addVertexWithUV(x + 32, y + 32, 0, (xOffset + 32) / 256f, (yOffset + 32) / 256f);
+			t.addVertexWithUV(x + 32, y, 0, (xOffset + 32) / 256f, yOffset / 256f);
+			t.draw();
+
+			GLRenderer.popFrame();
 		}
 	}
 

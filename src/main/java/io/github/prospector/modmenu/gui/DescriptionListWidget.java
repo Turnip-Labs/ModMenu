@@ -5,14 +5,14 @@ import io.github.prospector.modmenu.util.HardcodedUtil;
 import io.github.prospector.modmenu.util.RenderUtils;
 import net.fabricmc.loader.api.metadata.Person;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.Font;
+import net.minecraft.client.render.font.FontRenderer;
 import net.minecraft.core.lang.I18n;
 
 import java.util.Collection;
 
 public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget.DescriptionEntry> {
 	private final ModListScreen parent;
-	private final Font textRenderer;
+	private final FontRenderer textRenderer;
 	private ModListEntry lastSelected = null;
 
 	public DescriptionListWidget(Minecraft client, int width, int height, int top, int bottom, int entryHeight, ModListScreen parent) {
@@ -97,7 +97,7 @@ public class DescriptionListWidget extends EntryListWidget<DescriptionListWidget
 
 		@Override
 		public void render(int index, int y, int x, int itemWidth, int itemHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
-			textRenderer.drawStringWithShadow(text, x, y, 0xAAAAAA);
+			this.drawStringShadow(this.fontRenderer, text, x, y, 0xAAAAAA);
 		}
 	}
 

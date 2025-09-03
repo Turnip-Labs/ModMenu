@@ -3,9 +3,10 @@ package io.github.prospector.modmenu.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ButtonElement;
-import net.minecraft.client.render.Font;
-import net.minecraft.client.render.tessellator.Tessellator;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.client.render.font.FontRenderer;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 
 public class ModMenuTexturedButtonWidget extends ButtonElement {
 	private final String texture;
@@ -47,9 +48,7 @@ public class ModMenuTexturedButtonWidget extends ButtonElement {
 
 	public void render(Minecraft mc, int mouseX, int mouseY) {
 		if (this.visible) {
-			Font font = mc.font;
-			mc.textureManager.bindTexture(mc.textureManager.loadTexture(texture));
-			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+			FontRenderer font = mc.font;
 			boolean hovered = isHovered(mouseX, mouseY);
 
 			int adjustedV = this.v;
@@ -60,21 +59,30 @@ public class ModMenuTexturedButtonWidget extends ButtonElement {
 			}
 			float uScale = 1f / uWidth;
 			float vScale = 1f / vHeight;
-			Tessellator tess = Tessellator.instance;
-			tess.startDrawingQuads();
-			tess.addVertexWithUV(xPosition, yPosition + height, this.zLevel, (float) u * uScale, (float)(adjustedV + height) * vScale);
-			tess.addVertexWithUV(xPosition + width, yPosition + height, this.zLevel, ((float)(u + width) * uScale), (float)(adjustedV + height) * vScale);
-			tess.addVertexWithUV(xPosition + width, yPosition, this.zLevel, (float)(u + width) * uScale, (float)adjustedV * vScale);
-			tess.addVertexWithUV(xPosition, yPosition, this.zLevel, (float) u * uScale, (float) adjustedV * vScale);
-			tess.draw();
+
+			GLRenderer.pushFrame();
+			GLRenderer.setShader(Shaders.INTERFACE);
+			GLRenderer.setColor4f(1, 1, 1, 1);
+
+			mc.textureManager.bindTexture(mc.textureManager.loadTexture(texture));
+
+			TessellatorGeneral t = GLRenderer.getTessellator();
+			t.startDrawingQuads();
+			t.addVertexWithUV(xPosition, yPosition + height, this.zLevel, (float) u * uScale, (float)(adjustedV + height) * vScale);
+			t.addVertexWithUV(xPosition + width, yPosition + height, this.zLevel, ((float)(u + width) * uScale), (float)(adjustedV + height) * vScale);
+			t.addVertexWithUV(xPosition + width, yPosition, this.zLevel, (float)(u + width) * uScale, (float)adjustedV * vScale);
+			t.addVertexWithUV(xPosition, yPosition, this.zLevel, (float) u * uScale, (float) adjustedV * vScale);
+			t.draw();
+
+			GLRenderer.popFrame();
 
 			this.mouseDragged(mc, mouseX, mouseY);
 			if (!this.enabled) {
-				this.drawStringCentered(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffa0a0a0);
+				this.drawStringCenteredNoShadow(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffa0a0a0);
 			} else if (hovered) {
-				this.drawStringCentered(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffffa0);
+				this.drawStringCenteredNoShadow(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xffffa0);
 			} else {
-				this.drawStringCentered(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xe0e0e0);
+				this.drawStringCenteredNoShadow(font, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, 0xe0e0e0);
 			}
 		}
 	}
