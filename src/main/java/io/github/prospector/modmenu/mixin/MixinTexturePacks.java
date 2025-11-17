@@ -13,7 +13,7 @@ import java.io.InputStream;
 public abstract class MixinTexturePacks {
     @WrapOperation(method = "getResourceAsStream", at = @At(value = "INVOKE", target = "Ljava/lang/Class;getResourceAsStream(Ljava/lang/String;)Ljava/io/InputStream;", remap = false))
     private InputStream modmenu$onGetResource(Class<?> instance, String name, Operation<InputStream> original) {
-        InputStream inputStream = ModMenu.class.getClassLoader().getResourceAsStream(name);
+        InputStream inputStream = original.call(ModMenu.class, name);
         if (inputStream != null) return inputStream;
         return original.call(instance, name);
     }
