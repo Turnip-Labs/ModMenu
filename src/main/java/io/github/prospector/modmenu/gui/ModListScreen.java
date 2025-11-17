@@ -26,6 +26,7 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
 import org.spongepowered.include.com.google.common.base.Joiner;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.*;
@@ -345,7 +346,7 @@ public class ModListScreen extends Screen {
                         // Linux / BSD: xdg-open (freedesktop standard)
                         new ProcessBuilder("xdg-open", modsFolder.toString()).start();
                     }
-                } catch (Exception e) {
+                } catch (IOException e) {
                     ModMenu.LOGGER.error("Failed to open mods folder", e);
                 }
                 break;
