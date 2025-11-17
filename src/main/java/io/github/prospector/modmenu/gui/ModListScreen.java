@@ -24,12 +24,9 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.include.com.google.common.base.Joiner;
 
-import java.io.File;
-import java.net.MalformedURLException;
+import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -38,7 +35,6 @@ public class ModListScreen extends Screen {
             "/assets/" + ModMenu.MOD_ID + "/textures/gui/filters_button.png";
     private static final String CONFIGURE_BUTTON_LOCATION =
             "/assets/" + ModMenu.MOD_ID + "/textures/gui/configure_button.png";
-    private static final Logger LOGGER = LoggerFactory.getLogger("modlistscreen");
 
     private final String textTitle;
     private final Screen parent;
@@ -335,12 +331,8 @@ public class ModListScreen extends Screen {
                 break;
             }
             case MODS_FOLDER_BUTTON_ID: {
-                File modsFolder = new File(FabricLoader.getInstance().getGameDir().toFile(), "mods");
-                try {
-                    Sys.openURL(modsFolder.toURI().toURL().toString());
-                } catch (MalformedURLException e) {
-                    LOGGER.error("Malformed mods folder URL", e);
-                }
+                Path modsFolder = FabricLoader.getInstance().getGameDir().resolve("mods");
+                Sys.openURL(modsFolder.toUri().toString());
                 break;
             }
             case DONE_BUTTON_ID: {
