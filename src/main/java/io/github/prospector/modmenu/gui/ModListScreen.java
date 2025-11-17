@@ -185,8 +185,8 @@ public class ModListScreen extends Screen {
             @Override
             public void drawButton(Minecraft mc, int mouseX, int mouseY) {
                 visible = selected != null;
-                enabled = visible
-                        && selected.getMetadata().getContact().get("homepage").isPresent();
+                Optional<String> link = selected != null ? selected.getMetadata().getContact().get("homepage") : Optional.empty();
+                enabled = visible && link.isPresent() && !link.get().isEmpty();
                 super.drawButton(mc, mouseX, mouseY);
             }
         };
@@ -201,8 +201,8 @@ public class ModListScreen extends Screen {
             @Override
             public void drawButton(Minecraft mc, int mouseX, int mouseY) {
                 visible = selected != null;
-                enabled = visible
-                        && selected.getMetadata().getContact().get("issues").isPresent();
+                Optional<String> link = selected != null ? selected.getMetadata().getContact().get("issues") : Optional.empty();
+                enabled = visible && link.isPresent() && !link.get().isEmpty();
                 super.drawButton(mc, mouseX, mouseY);
             }
         };
