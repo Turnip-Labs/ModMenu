@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.mixin;
 
+import io.github.prospector.modmenu.ModMenu;
 import net.minecraft.core.lang.I18n;
 import net.minecraft.core.lang.Language;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,18 +16,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 @Mixin(value = I18n.class, remap = false)
-public class MixinI18n {
-    @Shadow private Language currentLanguage;
-
+public abstract class MixinI18n {
+    @Shadow
+    private Language currentLanguage;
     @Shadow
     public static InputStream getResourceAsStream(String path) {
         throw new AssertionError();
     }
-
-    @Inject(
-            method = "reload(Ljava/lang/String;Z)V",
-            at = @At("TAIL")
-    )
+    @Inject(method = "reload(Ljava/lang/String;Z)V", at = @At("TAIL"))
     private void modmenu$addLangEntries(String languageCode, boolean save, CallbackInfo ci) {
         Properties entries = ((LanguageAccessor) currentLanguage).getEntries();
         String lang = "/lang/modmenu/" + currentLanguage.getId() + ".lang";
@@ -36,7 +33,7 @@ public class MixinI18n {
                 entries.load(r);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            ModMenu.LOGGER.error("Something went wrong!", e);
         }
         String defaultLang = "/lang/modmenu/en_US.lang";
         try (InputStream stream = getResourceAsStream(defaultLang)) {
@@ -45,7 +42,7 @@ public class MixinI18n {
                 ((LanguageAccessor) (Object) Language.Default.INSTANCE).getEntries().load(r);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            ModMenu.LOGGER.error("Something went wrong!", e);
         }
     }
 }

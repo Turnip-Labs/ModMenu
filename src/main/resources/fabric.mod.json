@@ -20,7 +20,9 @@
     "issues": "https://github.com/Turnip-Labs/ModMenu/issues"
   },
   "depends": {
-    "fabricloader": "*"
+    "fabricloader": ">=${fabricloader}",
+    "minecraft": "*",
+    "java": ">=${java}"
   },
   "authors": [
     "Prospector"
@@ -48,12 +50,13 @@
     "LeonXu98",
     "magneticflux",
     "Earthcomputer",
-	"Ambos",
+    "Ambos",
     "Flamarine",
-    "sunsetsatellite"
+    "sunsetsatellite",
+    "SmushyTaco"
   ],
   "description": "Adds a mod menu to view the list of mods you have installed.",
   "mixins": [
-    "mixins.modmenu.json"
+    "modmenu.mixins.json"
   ]
 }
