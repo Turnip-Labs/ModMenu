@@ -332,7 +332,22 @@ public class ModListScreen extends Screen {
             }
             case MODS_FOLDER_BUTTON_ID: {
                 Path modsFolder = FabricLoader.getInstance().getGameDir().resolve("mods");
-                Sys.openURL(modsFolder.toUri().toString());
+                try {
+                    String os = System.getProperty("os.name").toLowerCase();
+
+                    if (os.contains("win")) {
+                        // Windows Explorer
+                        new ProcessBuilder("explorer.exe", modsFolder.toString()).start();
+                    } else if (os.contains("mac")) {
+                        // macOS Finder
+                        new ProcessBuilder("open", modsFolder.toString()).start();
+                    } else {
+                        // Linux / BSD: xdg-open (freedesktop standard)
+                        new ProcessBuilder("xdg-open", modsFolder.toString()).start();
+                    }
+                } catch (Exception e) {
+                    ModMenu.LOGGER.error("Failed to open mods folder", e);
+                }
                 break;
             }
             case DONE_BUTTON_ID: {
@@ -535,9 +550,7 @@ public class ModListScreen extends Screen {
     }
 
 
-    public void overlayBackground(int x1, int y1, int x2, int y2,
-                                  int red, int green, int blue,
-                                  int startAlpha, int endAlpha) {
+    public void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
         Tessellator tessellator = Tessellator.instance;
         mc.textureManager.bindTexture(mc.textureManager.loadTexture("/gui/background.png"));
         GL11.glColor4f(1f, 1f, 1f, 1f);
