@@ -18,8 +18,6 @@ import net.minecraft.client.render.Font;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.core.Global;
 import net.minecraft.core.lang.I18n;
-import org.lwjgl.Sys;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -92,7 +90,26 @@ public class ModListScreen extends Screen {
         }
     }
 
+    private static void openUrl(String url) {
+        try {
+            String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+            List<String> cmd;
 
+            if (os.contains("win")) {
+                // Use the standard Windows URL handler
+                cmd = Arrays.asList("rundll32", "url.dll,FileProtocolHandler", url);
+            } else if (os.contains("mac")) {
+                cmd = Arrays.asList("open", url);
+            } else {
+                // Linux / BSD
+                cmd = Arrays.asList("xdg-open", url);
+            }
+
+            new ProcessBuilder(cmd).start();
+        } catch (Exception e) {
+            ModMenu.LOGGER.error("Failed to open URL {}", url, e);
+        }
+    }
 
 
     @SuppressWarnings("unused")
@@ -113,7 +130,6 @@ public class ModListScreen extends Screen {
     @Override
     public void init() {
         I18n i18n = I18n.getInstance();
-        Keyboard.enableRepeatEvents(true);
         Font font = this.font;
 
         paneY = 48;
@@ -309,12 +325,12 @@ public class ModListScreen extends Screen {
             }
             case WEBSITE_BUTTON_ID: {
                 ModMetadata metadata = Objects.requireNonNull(selected).getMetadata();
-                metadata.getContact().get("homepage").ifPresent(Sys::openURL);
+                metadata.getContact().get("homepage").ifPresent(ModListScreen::openUrl);
                 break;
             }
             case ISSUES_BUTTON_ID: {
                 ModMetadata metadata = Objects.requireNonNull(selected).getMetadata();
-                metadata.getContact().get("issues").ifPresent(Sys::openURL);
+                metadata.getContact().get("issues").ifPresent(ModListScreen::openUrl);
                 break;
             }
             case TOGGLE_FILTER_OPTIONS_BUTTON_ID: {
