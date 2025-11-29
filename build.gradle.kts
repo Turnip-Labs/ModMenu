@@ -115,22 +115,14 @@ tasks {
         }
     }
     processResources {
-        val stringModVersion = modVersion.get()
-        val stringLoaderVersion = libs.versions.loader.get()
-        val stringJavaVersion = libs.versions.java.get()
-        inputs.property("modVersion", stringModVersion)
-        inputs.property("loaderVersion", stringLoaderVersion)
-        inputs.property("javaVersion", stringJavaVersion)
-        filesMatching("fabric.mod.json") {
-            expand(
-                mapOf(
-                    "version" to stringModVersion,
-                    "fabricloader" to stringLoaderVersion,
-                    "java" to stringJavaVersion
-                )
-            )
-        }
-        filesMatching("**/*.mixins.json") { expand(mapOf("java" to stringJavaVersion)) }
+        val resourceMap = mapOf(
+            "version" to modVersion.get(),
+            "fabricloader" to libs.versions.loader.get(),
+            "java" to libs.versions.java.get()
+        )
+        inputs.properties(resourceMap)
+        filesMatching("fabric.mod.json") { expand(resourceMap) }
+        filesMatching("**/*.mixins.json") { expand(resourceMap.filterKeys { it == "java" }) }
     }
 }
 // Removes LWJGL2 dependencies
@@ -155,4 +147,3 @@ publishing {
         }
     }
 }
-
