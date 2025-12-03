@@ -186,7 +186,7 @@ public class ModListScreen extends Screen {
             public void drawButton(Minecraft mc, int mouseX, int mouseY) {
                 visible = selected != null;
                 Optional<String> link = selected != null ? selected.getMetadata().getContact().get("homepage") : Optional.empty();
-                enabled = visible && link.isPresent() && !link.get().isEmpty();
+                enabled = visible && link.isPresent() && !link.get().trim().isEmpty();
                 super.drawButton(mc, mouseX, mouseY);
             }
         };
@@ -202,7 +202,7 @@ public class ModListScreen extends Screen {
             public void drawButton(Minecraft mc, int mouseX, int mouseY) {
                 visible = selected != null;
                 Optional<String> link = selected != null ? selected.getMetadata().getContact().get("issues") : Optional.empty();
-                enabled = visible && link.isPresent() && !link.get().isEmpty();
+                enabled = visible && link.isPresent() && !link.get().trim().isEmpty();
                 super.drawButton(mc, mouseX, mouseY);
             }
         };
@@ -260,7 +260,8 @@ public class ModListScreen extends Screen {
         ) {
             @Override
             public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-                visible = enabled = filterOptionsShown;
+                visible = filterOptionsShown;
+                enabled = filterOptionsShown;
                 this.displayString = i18n.translateKeyAndFormat(
                         "modmenu.sorting",
                         ModMenuConfigManager.getConfig().getSorting().getName()
@@ -277,7 +278,8 @@ public class ModListScreen extends Screen {
         ) {
             @Override
             public void drawButton(Minecraft mc, int mouseX, int mouseY) {
-                visible = enabled = filterOptionsShown;
+                visible = filterOptionsShown;
+                enabled = filterOptionsShown;
                 this.displayString = i18n.translateKeyAndFormat(
                         "modmenu.showLibraries",
                         i18n.translateKey("modmenu.showLibraries."
