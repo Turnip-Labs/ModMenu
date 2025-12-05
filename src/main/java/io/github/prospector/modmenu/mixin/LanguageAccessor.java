@@ -6,10 +6,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Properties;
 
-@Mixin(
-        value = Language.class,
-        remap = false
-)
+@Mixin(value = Language.class, remap = false)
 public interface LanguageAccessor {
     @Accessor
     Properties getEntries();

@@ -2,6 +2,7 @@ modmenu.title=Mods
 modmenu.loaded=(%s Loaded)
 modmenu.config=Edit Config
 modmenu.modsFolder=Open Mods Folder
+modmenu.done=Done
 modmenu.configsFolder=Open Configs Folder
 modmenu.configure=Configure...
 modmenu.modIdToolTip=Mod ID: %s

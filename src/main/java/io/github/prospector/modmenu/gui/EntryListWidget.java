@@ -1,13 +1,13 @@
 package io.github.prospector.modmenu.gui;
 
-
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.core.util.helper.MathHelper;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.spongepowered.include.com.google.common.collect.Lists;
@@ -17,537 +17,658 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings({"unchecked", "unused"})
 @Environment(EnvType.CLIENT)
 public abstract class EntryListWidget<E extends EntryListWidget.Entry<E>> extends Screen {
-	protected static final int DRAG_OUTSIDE = -2;
-	protected final Minecraft minecraft;
-	protected final int itemHeight;
-	private final List<E> children = new EntryListWidget.Entries();
-	protected int width;
-	protected int height;
-	protected int top;
-	protected int bottom;
-	protected int right;
-	protected int left;
-	protected boolean centerListVertically = true;
-	protected int yDrag = -2;
-	private double scrollAmount;
-	protected boolean renderSelection = true;
-	protected boolean renderHeader;
-	protected int headerHeight;
-	private boolean scrolling;
-	private E selected;
+    protected static final int TOP_PADDING = 4;
+    protected static final int SCROLLBAR_WIDTH = 6;
+    protected final Minecraft minecraft;
+    protected final int itemHeight;
+    private final List<E> children = new EntryListWidget<E>.EntryList();
+    protected int top;
+    protected int bottom;
+    protected int right;
+    protected int left;
+    private double scrollAmount;
+    protected boolean renderSelection = true;
+    protected boolean shouldRenderHeader;
+    protected int headerHeight;
+    private E selected;
+    private E focused;
 
-	private E focused;
-	private boolean dragging;
+    protected EntryListWidget(Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
+        this.minecraft = minecraft;
+        this.width = width;
+        this.height = height;
+        this.top = top;
+        this.bottom = bottom;
+        this.itemHeight = itemHeight;
+        this.left = 0;
+        this.right = width;
+    }
 
-	public EntryListWidget(Minecraft minecraftClient, int i, int j, int k, int l, int m) {
-		this.minecraft = minecraftClient;
-		this.width = i;
-		this.height = j;
-		this.top = k;
-		this.bottom = l;
-		this.itemHeight = m;
-		this.left = 0;
-		this.right = i;
-	}
+    @SuppressWarnings("unused")
+    public void setRenderSelection(boolean bl) {
+        this.renderSelection = bl;
+    }
 
-	public void setRenderSelection(boolean bl) {
-		this.renderSelection = bl;
-	}
+    @SuppressWarnings("unused")
+    protected void setRenderHeader(boolean bl, int i) {
+        this.shouldRenderHeader = bl;
+        this.headerHeight = i;
+        if (!bl) {
+            this.headerHeight = 0;
+        }
 
-	protected void setRenderHeader(boolean bl, int i) {
-		this.renderHeader = bl;
-		this.headerHeight = i;
-		if (!bl) {
-			this.headerHeight = 0;
-		}
+    }
 
-	}
+    public int getRowWidth() {
+        return 220;
+    }
 
-	public int getRowWidth() {
-		return 220;
-	}
+    @Nullable
+    public E getSelected() {
+        return this.selected;
+    }
 
-	@Nullable
-	public E getSelected() {
-		return this.selected;
-	}
+    public void setSelected(@Nullable E entry) {
+        this.selected = entry;
+    }
 
-	public void setSelected(@Nullable E entry) {
-		this.selected = entry;
-	}
+    @Nullable
+    public E getFocused() {
+        return focused;
+    }
 
-	@Nullable
-	public E getFocused() {
-		return focused;
-	}
+    @SuppressWarnings("unused")
+    public void setFocused(E focused) {
+        this.focused = focused;
+    }
 
-	public void setFocused(E focused) {
-		this.focused = focused;
-	}
+    public final List<E> children() {
+        return this.children;
+    }
 
-	public void setDragging(boolean dragging) {
-		this.dragging = dragging;
-	}
+    protected final void clearEntries() {
+        this.children.clear();
+    }
 
-	public final List<E> children() {
-		return this.children;
-	}
+    @SuppressWarnings("unused")
+    protected void replaceEntries(Collection<E> collection) {
+        this.children.clear();
+        this.children.addAll(collection);
+    }
 
-	protected final void clearEntries() {
-		this.children.clear();
-	}
+    protected E getEntry(int index) {
+        return this.children().get(index);
+    }
 
-	protected void replaceEntries(Collection<E> collection) {
-		this.children.clear();
-		this.children.addAll(collection);
-	}
+    protected int addEntry(E entry) {
+        this.children.add(entry);
+        return this.children.size() - 1;
+    }
 
-	protected E getEntry(int i) {
-		return this.children().get(i);
-	}
+    protected int getItemCount() {
+        return this.children().size();
+    }
 
-	protected int addEntry(E entry) {
-		this.children.add(entry);
-		return this.children.size() - 1;
-	}
+    protected boolean isSelectedItem(int index) {
+        return Objects.equals(this.getSelected(), this.children().get(index));
+    }
 
-	protected int getItemCount() {
-		return this.children().size();
-	}
+    @Nullable
+    protected E getEntryAtPosition(double mouseX, double mouseY) {
+        int halfRowWidth = this.getRowWidth() / 2;
+        int centerX = this.left + this.width / 2;
+        int rowLeft = centerX - halfRowWidth;
+        int rowRight = centerX + halfRowWidth;
 
-	protected boolean isSelectedItem(int i) {
-		return Objects.equals(this.getSelected(), this.children().get(i));
-	}
+        // Convert screen Y to list-relative Y, accounting for header and scroll
+        int yInList = MathHelper.floor(mouseY - this.top) - this.headerHeight + (int) this.getScrollAmount() - TOP_PADDING;
+        int rowIndex = yInList / this.itemHeight;
 
-	@Nullable
-	protected final E getEntryAtPosition(double d, double e) {
-		int i = this.getRowWidth() / 2;
-		int j = this.left + this.width / 2;
-		int k = j - i;
-		int l = j + i;
-		int m = MathHelper.floor(e - (double)this.top) - this.headerHeight + (int)this.getScrollAmount() - 4; // convertToBlockCoord
-		int n = m / this.itemHeight;
-		return d < (double)this.getScrollbarPosition() && d >= (double)k && d <= (double)l && n >= 0 && m >= 0 && n < this.getItemCount() ? this.children().get(n) : null;
-	}
+        // Outside horizontal list area or over scrollbar
+        if (mouseX >= this.getScrollbarPosition() || mouseX < rowLeft || mouseX > rowRight) {
+            return null;
+        }
 
-	public void updateSize(int i, int j, int k, int l) {
-		this.width = i;
-		this.height = j;
-		this.top = k;
-		this.bottom = l;
-		this.left = 0;
-		this.right = i;
-	}
+        // Above first row or before header area
+        if (yInList < 0 || rowIndex < 0 || rowIndex >= this.getItemCount()) {
+            return null;
+        }
 
-	public void setLeftPos(int i) {
-		this.left = i;
-		this.right = i + this.width;
-	}
-
-	protected int getMaxPosition() {
-		return this.getItemCount() * this.itemHeight + this.headerHeight;
-	}
-
-	protected void clickedHeader(int i, int j) {
-	}
-
-	protected void renderHeader(int i, int j, Tessellator tessellator) {
-	}
+        return this.children().get(rowIndex);
+    }
 
 
-	public void renderBackground() {
-	}
+    @SuppressWarnings("unused")
+    public void updateSize(int width, int height, int top, int bottom) {
+        this.width = width;
+        this.height = height;
+        this.top = top;
+        this.bottom = bottom;
+        this.left = 0;
+        this.right = width;
+    }
 
-	protected void renderDecorations(int i, int j) {
-	}
+    public void setLeftEdge(int leftEdge) {
+        this.left = leftEdge;
+        this.right = leftEdge + this.width;
+    }
 
-	public void render(int i, int j, float f) {
-		oldY = j;
-		this.renderBackground();
-		int k = this.getScrollbarPosition();
-		int l = k + 6;
-		Tessellator tessellator = Tessellator.instance;
-		this.minecraft.textureManager.bindTexture(this.minecraft.textureManager.loadTexture("/gui/background.png"));
-		GL11.glColor4f(1f, 1f, 1f, 1f);
-		float g = 32.0F;
-		tessellator.startDrawingQuads();
-		tessellator.setColorOpaque(32, 32, 32);
-		tessellator.addVertexWithUV(this.left, this.bottom, 0.0D, (float)this.left / 32.0F, (float)(this.bottom + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.addVertexWithUV(this.right, this.bottom, 0.0D, (float)this.right / 32.0F, (float)(this.bottom + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.addVertexWithUV(this.right, this.top, 0.0D, (float)this.right / 32.0F, (float)(this.top + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.addVertexWithUV(this.left, this.top, 0.0D, (float)this.left / 32.0F, (float)(this.top + (int)this.getScrollAmount()) / 32.0F);
-		tessellator.draw();
-		int m = this.getRowLeft();
-		int n = this.top + 4 - (int)this.getScrollAmount();
-		if (this.renderHeader) {
-			this.renderHeader(m, n, tessellator);
-		}
+    protected int getMaxPosition() {
+        return this.getItemCount() * this.itemHeight + this.headerHeight;
+    }
 
-		this.renderList(m, n, i, j, f);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		this.renderHoleBackground(0, this.top, 255, 255);
-		this.renderHoleBackground(this.bottom, this.height, 255, 255);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ZERO, GL11.GL_ONE);
-		GL11.glDisable(GL11.GL_ALPHA_TEST);
-		GL11.glShadeModel(GL11.GL_SMOOTH);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
-		boolean o = true;
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA(0, 0, 0, 0);
-		tessellator.addVertexWithUV(this.left, this.top + 4, 0.0D, 0.0F, 1.0F);
-		tessellator.addVertexWithUV(this.right, this.top + 4, 0.0D, 1.0F, 1.0F);
-		tessellator.setColorOpaque(0, 0, 0);
-		tessellator.addVertexWithUV(this.right, this.top, 0.0D, 1.0F, 0.0F);
-		tessellator.addVertexWithUV(this.left, this.top, 0.0D, 0.0F, 0.0F);
-		tessellator.draw();
-		tessellator.startDrawingQuads();
-		tessellator.setColorOpaque(0, 0, 0);
-		tessellator.addVertexWithUV(this.left, this.bottom, 0.0D, 0.0F, 1.0F);
-		tessellator.addVertexWithUV(this.right, this.bottom, 0.0D, 1.0F, 1.0F);
-		tessellator.setColorRGBA(0, 0, 0, 0);
-		tessellator.addVertexWithUV(this.right, this.bottom - 4, 0.0D, 1.0F, 0.0F);
-		tessellator.addVertexWithUV(this.left, this.bottom - 4, 0.0D, 0.0F, 0.0F);
-		tessellator.draw();
-		int p = this.getMaxScroll();
-		if (p > 0) {
-			int q = (int)((float)((this.bottom - this.top) * (this.bottom - this.top)) / (float)this.getMaxPosition());
-			if (q < 32)
-				q = 32;
-			else if (q > this.bottom - this.top - 8)
-				q = this.bottom - this.top - 8;
-			int r = (int)this.getScrollAmount() * (this.bottom - this.top - q) / p + this.top;
-			if (r < this.top) {
-				r = this.top;
-			}
+    @SuppressWarnings("unused")
+    protected void onHeaderClicked(int relativeX, int relativeY) {}
 
-			tessellator.startDrawingQuads();
-			tessellator.setColorOpaque(0, 0, 0);
-			tessellator.addVertexWithUV(k, this.bottom, 0.0D, 0.0F, 1.0F);
-			tessellator.addVertexWithUV(l, this.bottom, 0.0D, 1.0F, 1.0F);
-			tessellator.addVertexWithUV(l, this.top, 0.0D, 1.0F, 0.0F);
-			tessellator.addVertexWithUV(k, this.top, 0.0D, 0.0F, 0.0F);
-			tessellator.draw();
-			tessellator.startDrawingQuads();
-			tessellator.setColorOpaque(128, 128, 128);
-			tessellator.addVertexWithUV(k, r + q, 0.0D, 0.0F, 1.0F);
-			tessellator.addVertexWithUV(l, r + q, 0.0D, 1.0F, 1.0F);
-			tessellator.addVertexWithUV(l, r, 0.0D, 1.0F, 0.0F);
-			tessellator.addVertexWithUV(k, r, 0.0D, 0.0F, 0.0F);
-			tessellator.draw();
-			tessellator.startDrawingQuads();
-			tessellator.setColorOpaque(192, 192, 192);
-			tessellator.addVertexWithUV(k, r + q - 1, 0.0D, 0.0F, 1.0F);
-			tessellator.addVertexWithUV(l - 1, r + q - 1, 0.0D, 1.0F, 1.0F);
-			tessellator.addVertexWithUV(l - 1, r, 0.0D, 1.0F, 0.0F);
-			tessellator.addVertexWithUV(k, r, 0.0D, 0.0F, 0.0F);
-			tessellator.draw();
-		}
-
-		this.renderDecorations(i, j);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		GL11.glShadeModel(GL11.GL_FLAT);
-		GL11.glEnable(GL11.GL_ALPHA_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-	}
-
-	protected void centerScrollOn(E entry) {
-		this.setScrollAmount(this.children().indexOf(entry) * this.itemHeight + this.itemHeight / 2 - (this.bottom - this.top) / 2);
-	}
-
-	protected void ensureVisible(E entry) {
-		int i = this.getRowTop(this.children().indexOf(entry));
-		int j = i - this.top - 4 - this.itemHeight;
-		if (j < 0) {
-			this.scroll(j);
-		}
-
-		int k = this.bottom - i - this.itemHeight - this.itemHeight;
-		if (k < 0) {
-			this.scroll(-k);
-		}
-
-	}
-
-	private void scroll(int i) {
-		this.setScrollAmount(this.getScrollAmount() + (double)i);
-		this.yDrag = -2;
-	}
-
-	public double getScrollAmount() {
-		return this.scrollAmount;
-	}
-
-	public void setScrollAmount(double d) {
-		if (d < 0)
-			d = 0;
-		if (d > getMaxScroll())
-			d = getMaxScroll();
-		this.scrollAmount = d;
-	}
-
-	private int getMaxScroll() {
-		return Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4));
-	}
-
-	public int getScrollBottom() {
-		return (int)this.getScrollAmount() - this.height - this.headerHeight;
-	}
-
-	protected void updateScrollingState(double d, double e, int i) {
-		this.scrolling = i == 0 && d >= (double)this.getScrollbarPosition() && d < (double)(this.getScrollbarPosition() + 6);
-	}
-
-	protected int getScrollbarPosition() {
-		return this.width / 2 + 124;
-	}
+    @SuppressWarnings("unused")
+    protected void renderHeader(int left, int top, Tessellator tessellator) {}
 
     @Override
-	public void mouseClicked(int d, int e, int i) {
-		this.updateScrollingState(d, e, i);
-		if (this.isMouseOver(d, e))  {
-			E entry = this.getEntryAtPosition(d, e);
-			if (entry != null) {
-                if (entry.list.getFocused() != null) {
-                    if (!entry.list.getFocused().equals(entry)) {
-                        this.focused = entry;
-                        this.selected = entry;
-                        this.dragging = true;
-                        super.mouseClicked(d, e, i);
-                    }
-                } else {
-                    this.focused = entry;
-                    this.selected = entry;
-                    this.dragging = true;
-                    super.mouseClicked(d, e, i);
+    public void renderBackground() {}
+
+    @SuppressWarnings("unused")
+    protected void renderDecorations(int mouseX, int mouseY) {}
+
+    @Override
+    public void render(int mouseX, int mouseY, float delta) {
+        // No more oldY usage – we now use deltaY in mouseDragged instead
+
+        this.renderBackground();
+
+        int scrollbarX = this.getScrollbarPosition();
+        int scrollbarEndX = scrollbarX + SCROLLBAR_WIDTH;
+
+        Tessellator tessellator = Tessellator.instance;
+
+        // Background texture
+        this.minecraft.textureManager.bindTexture(
+                this.minecraft.textureManager.loadTexture("/gui/background.png")
+        );
+        GL11.glColor4f(1f, 1f, 1f, 1f);
+
+        tessellator.startDrawingQuads();
+        tessellator.setColorOpaque(32, 32, 32);
+        tessellator.addVertexWithUV(this.left, this.bottom, 0.0D, this.left / 32.0F, (this.bottom + (int) this.getScrollAmount()) / 32.0F);
+        tessellator.addVertexWithUV(this.right, this.bottom, 0.0D, this.right / 32.0F, (this.bottom + (int) this.getScrollAmount()) / 32.0F);
+        tessellator.addVertexWithUV(this.right, this.top, 0.0D,this.right / 32.0F, (this.top + (int) this.getScrollAmount()) / 32.0F);
+        tessellator.addVertexWithUV(this.left, this.top, 0.0D, this.left / 32.0F, (this.top + (int) this.getScrollAmount()) / 32.0F);
+        tessellator.draw();
+
+        int rowLeft = this.getRowLeft();
+        int baseRowTop = this.top + TOP_PADDING - (int) this.getScrollAmount();
+
+        // Optional header
+        if (this.shouldRenderHeader) {
+            this.renderHeader(rowLeft, baseRowTop, tessellator);
+        }
+
+        // List entries
+        this.renderList(rowLeft, baseRowTop, mouseX, mouseY, delta);
+
+        // Black top/bottom overlays
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        this.renderHoleBackground(0, this.top, 255, 255);
+        this.renderHoleBackground(this.bottom, this.height, 255, 255);
+
+        // Fade edges
+        GL11.glEnable(GL11.GL_BLEND);
+        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ZERO, GL11.GL_ONE);
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GL11.glShadeModel(GL11.GL_SMOOTH);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+
+        // Top gradient
+        tessellator.startDrawingQuads();
+        tessellator.setColorRGBA(0, 0, 0, 0);
+        tessellator.addVertexWithUV(this.left, (double) this.top + TOP_PADDING, 0.0D, 0.0F, 1.0F);
+        tessellator.addVertexWithUV(this.right, (double) this.top + TOP_PADDING, 0.0D, 1.0F, 1.0F);
+        tessellator.setColorOpaque(0, 0, 0);
+        tessellator.addVertexWithUV(this.right, this.top, 0.0D, 1.0F, 0.0F);
+        tessellator.addVertexWithUV(this.left, this.top, 0.0D, 0.0F, 0.0F);
+        tessellator.draw();
+
+        // Bottom gradient
+        tessellator.startDrawingQuads();
+        tessellator.setColorOpaque(0, 0, 0);
+        tessellator.addVertexWithUV(this.left, this.bottom, 0.0D, 0.0F, 1.0F);
+        tessellator.addVertexWithUV(this.right, this.bottom, 0.0D, 1.0F, 1.0F);
+        tessellator.setColorRGBA(0, 0, 0, 0);
+        tessellator.addVertexWithUV(this.right, (double) this.bottom - TOP_PADDING, 0.0D, 1.0F, 0.0F);
+        tessellator.addVertexWithUV(this.left, (double) this.bottom - TOP_PADDING, 0.0D, 0.0F, 0.0F);
+        tessellator.draw();
+
+        // Scrollbar
+        int maxScroll = this.getMaxScroll();
+        if (maxScroll > 0) {
+            int visibleHeight = this.bottom - this.top;
+            int contentHeight = this.getMaxPosition();
+
+            int thumbHeight = (int) ((float) visibleHeight * visibleHeight / contentHeight);
+            if (thumbHeight < 32) {
+                thumbHeight = 32;
+            } else if (thumbHeight > visibleHeight - 8) {
+                thumbHeight = visibleHeight - 8;
+            }
+
+            int thumbY = (int) this.getScrollAmount() * (visibleHeight - thumbHeight) / maxScroll + this.top;
+            if (thumbY < this.top) {
+                thumbY = this.top;
+            }
+
+            // Scrollbar track
+            tessellator.startDrawingQuads();
+            tessellator.setColorOpaque(0, 0, 0);
+            tessellator.addVertexWithUV(scrollbarX, this.bottom, 0.0D, 0.0F, 1.0F);
+            tessellator.addVertexWithUV(scrollbarEndX, this.bottom, 0.0D, 1.0F, 1.0F);
+            tessellator.addVertexWithUV(scrollbarEndX, this.top, 0.0D, 1.0F, 0.0F);
+            tessellator.addVertexWithUV(scrollbarX, this.top, 0.0D, 0.0F, 0.0F);
+            tessellator.draw();
+
+            // Scrollbar thumb (inner)
+            tessellator.startDrawingQuads();
+            tessellator.setColorOpaque(128, 128, 128);
+            tessellator.addVertexWithUV(scrollbarX, (double) thumbY + thumbHeight, 0.0D, 0.0F, 1.0F);
+            tessellator.addVertexWithUV(scrollbarEndX, (double) thumbY + thumbHeight, 0.0D, 1.0F, 1.0F);
+            tessellator.addVertexWithUV(scrollbarEndX, thumbY, 0.0D, 1.0F, 0.0F);
+            tessellator.addVertexWithUV(scrollbarX, thumbY, 0.0D, 0.0F, 0.0F);
+            tessellator.draw();
+
+            // Scrollbar thumb border
+            tessellator.startDrawingQuads();
+            tessellator.setColorOpaque(192, 192, 192);
+            tessellator.addVertexWithUV(scrollbarX, thumbY + thumbHeight - 1.0, 0.0D, 0.0F, 1.0F);
+            tessellator.addVertexWithUV(scrollbarEndX - 1.0, thumbY + thumbHeight - 1.0, 0.0D, 1.0F, 1.0F);
+            tessellator.addVertexWithUV(scrollbarEndX - 1.0, thumbY, 0.0D, 1.0F, 0.0F);
+            tessellator.addVertexWithUV(scrollbarX, thumbY,0.0D, 0.0F, 0.0F);
+            tessellator.draw();
+        }
+
+        // Extra decorations hook
+        this.renderDecorations(mouseX, mouseY);
+
+        // Restore GL state
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glShadeModel(GL11.GL_FLAT);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glDisable(GL11.GL_BLEND);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+    }
+
+    @SuppressWarnings("unused")
+    protected void centerScrollOn(E entry) {
+        int index = this.children().indexOf(entry);
+        if (index < 0) return; // entry not found
+
+        int listHeight = this.bottom - this.top;
+        int entryTop = getRowTop(index);
+        int entryCenter = entryTop + (this.itemHeight / 2);
+
+        double newScroll = entryCenter - (listHeight / 2.0);
+        this.setScrollAmount(newScroll);
+    }
+
+    protected void ensureVisible(E entry) {
+        int rowIndex = this.children().indexOf(entry);
+        if (rowIndex < 0) {
+            return;
+        }
+
+        int rowTop = this.getRowTop(rowIndex);
+
+        // How far the row is above the visible area (negative = off the top)
+        int overshootAbove = rowTop - this.top - TOP_PADDING - this.itemHeight;
+        if (overshootAbove < 0) {
+            this.applyScrollDelta(overshootAbove);
+        }
+
+        // How far the row is below the visible area (negative = off the bottom)
+        int overshootBelow = this.bottom - rowTop - this.itemHeight - this.itemHeight;
+        if (overshootBelow < 0) {
+            this.applyScrollDelta(-overshootBelow);
+        }
+    }
+
+
+    private void applyScrollDelta(double deltaY) {
+        if (deltaY == 0) {
+            return;
+        }
+        this.setScrollAmount(this.getScrollAmount() + deltaY);
+    }
+
+    public double getScrollAmount() {
+        return this.scrollAmount;
+    }
+
+    public void setScrollAmount(double value) {
+        this.scrollAmount = MathHelper.clamp(value, 0, this.getMaxScroll());
+    }
+
+    private int getMaxScroll() {
+        return Math.max(0, this.getMaxPosition() - (this.bottom - this.top - TOP_PADDING));
+    }
+
+    protected int getScrollbarPosition() {
+        int halfList = this.getRowWidth() / 2;
+        int centerX = this.left + this.width / 2;
+        return centerX + halfList;
+    }
+
+    @Override
+    public void mouseClicked(int mouseX, int mouseY, int button) {
+        // Ignore clicks outside the list bounds
+        if (!this.isMouseOver(mouseX, mouseY)) {
+            return;
+        }
+
+        E clickedEntry = this.getEntryAtPosition(mouseX, mouseY);
+        if (clickedEntry != null) {
+            // Only change focus/selection if it's a different entry
+            if (this.focused == null || this.focused != clickedEntry) {
+                this.focused = clickedEntry;
+                this.selected = clickedEntry;
+                super.mouseClicked(mouseX, mouseY, button);
+            }
+        } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            // Left-click on header area
+            int headerClickX = (int) (mouseX - (this.left + this.width / 2.0 - this.getRowWidth() / 2.0));
+            int headerClickY = (int) (mouseY - (double) this.top) + (int) this.getScrollAmount() - TOP_PADDING;
+            this.onHeaderClicked(headerClickX, headerClickY);
+        }
+    }
+
+
+    @SuppressWarnings("unused")
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        E theFocused = this.getFocused();
+        if (theFocused != null) {
+            return theFocused.mouseReleased(mouseX, mouseY, button);
+        }
+        return false;
+    }
+
+    @SuppressWarnings({"UnusedReturnValue", "unused"})
+    public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double deltaX, double deltaY) {
+        if (mouseButton == GLFW.GLFW_MOUSE_BUTTON_LEFT && isMouseOver(mouseX, mouseY)) {
+            int maxScroll = this.getMaxScroll();
+            if (maxScroll <= 0) {
+                return false;
+            }
+
+            int visibleHeight = this.bottom - this.top;
+            int contentHeight = this.getMaxPosition();
+
+            // Same logic as in render() for thumb height
+            int thumbHeight = (int) ((float) visibleHeight * visibleHeight / contentHeight);
+            if (thumbHeight < 32) {
+                thumbHeight = 32;
+            } else if (thumbHeight > visibleHeight - 8) {
+                thumbHeight = visibleHeight - 8;
+            }
+
+            int scrollTrack = visibleHeight - thumbHeight;
+            if (scrollTrack <= 0) {
+                return false;
+            }
+
+            // Map drag distance in screen space to scroll distance in content space
+            double scrollChange = deltaY * maxScroll / scrollTrack;
+
+            // Sign is chosen so it matches the now-correct wheel direction
+            this.setScrollAmount(this.getScrollAmount() + scrollChange);
+            return true;
+        }
+        return false;
+    }
+
+    @SuppressWarnings({"UnusedReturnValue", "unused"})
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        // scrollDelta is Mouse.getDWheel(), e.g. ±120 or ±1 depending on the platform.
+        // We mimic ScreenOptions: scrollAmount += dWheel / -0.05F;
+        double amount = scrollDelta / -0.05D;
+
+        // Apply to our scrollAmount
+        this.setScrollAmount(this.getScrollAmount() + amount);
+        return true;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // First let the focused entry handle it
+        E theFocused = this.getFocused();
+        if (theFocused != null && theFocused.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        // Handle up/down arrow movement
+        if (keyCode == GLFW.GLFW_KEY_DOWN) {
+            this.moveSelection(1);
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_UP) {
+            this.moveSelection(-1);
+            return true;
+        }
+        return false;
+    }
+
+    protected void moveSelection(int direction) {
+        if (!this.children().isEmpty()) {
+            int currentIndex = this.children().indexOf(this.getSelected());
+            int newIndex = MathHelper.clamp(currentIndex + direction, 0, getItemCount() - 1);
+
+            E entry = this.children().get(newIndex);
+            this.setSelected(entry);
+            this.ensureVisible(entry);
+        }
+    }
+
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseY >= this.top && mouseY <= this.bottom
+                && mouseX >= this.left && mouseX <= this.right;
+    }
+
+    @SuppressWarnings("java:S1172")
+    protected void renderList(int rowLeft, int baseRowTop, int mouseX, int mouseY, float delta) {
+        int itemCount = this.getItemCount();
+        Tessellator tessellator = Tessellator.instance;
+
+        for (int rowIndex = 0; rowIndex < itemCount; ++rowIndex) {
+            int rowTop = this.getRowTop(rowIndex);
+            int rowBottom = this.getRowBottom(rowIndex);
+
+            // Only render rows that are visible in the current viewport
+            if (rowBottom >= this.top && rowTop <= this.bottom) {
+                int entryTop = baseRowTop + rowIndex * this.itemHeight + this.headerHeight;
+                int rowHeightInner = this.itemHeight - TOP_PADDING;
+                E entry = this.getEntry(rowIndex);
+                int rowWidth = this.getRowWidth();
+
+                if (this.renderSelection && this.isSelectedItem(rowIndex)) {
+                    int selectionLeft = this.left + this.width / 2 - rowWidth / 2;
+                    int selectionRight = this.left + this.width / 2 + rowWidth / 2;
+
+                    GL11.glDisable(GL11.GL_TEXTURE_2D);
+                    float selectionBrightness = this.isFocused() ? 1.0F : 0.5F;
+                    GL11.glColor4f(selectionBrightness, selectionBrightness, selectionBrightness, 1f);
+
+                    // Outer selection box
+                    tessellator.startDrawingQuads();
+                    tessellator.addVertex(selectionLeft, entryTop + rowHeightInner + 2.0, 0.0D);
+                    tessellator.addVertex(selectionRight, entryTop + rowHeightInner + 2.0, 0.0D);
+                    tessellator.addVertex(selectionRight, entryTop - 2.0, 0.0D);
+                    tessellator.addVertex(selectionLeft, entryTop - 2.0, 0.0D);
+                    tessellator.draw();
+
+                    // Inner border
+                    GL11.glColor4f(0f, 0f, 0f, 1f);
+                    tessellator.startDrawingQuads();
+                    tessellator.addVertex(selectionLeft + 1.0, entryTop + rowHeightInner + 1.0, 0.0D);
+                    tessellator.addVertex(selectionRight - 1.0, entryTop + rowHeightInner + 1.0, 0.0D);
+                    tessellator.addVertex(selectionRight - 1.0, entryTop - 1.0, 0.0D);
+                    tessellator.addVertex(selectionLeft + 1.0, entryTop - 1.0, 0.0D);
+                    tessellator.draw();
+
+                    GL11.glEnable(GL11.GL_TEXTURE_2D);
                 }
-			} else if (i == 0) {
-				this.clickedHeader((int)(d - (double)(this.left + this.width / 2 - this.getRowWidth() / 2)), (int)(e - (double)this.top) + (int)this.getScrollAmount() - 4);
-			}
-		}
-	}
 
-	public boolean mouseReleased(double d, double e, int i) {
-		if (this.getFocused() != null) {
-			this.getFocused().mouseReleased(d, e, i);
-		}
-		return false;
-	}
+                int entryLeft = this.getRowLeft();
+                boolean hovered = this.isMouseOver(mouseX, mouseY)
+                        && Objects.equals(this.getEntryAtPosition(mouseX, mouseY), entry);
 
-	double oldY = -1;
-	public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double mouseDX, double mouseDY) {
-		if (mouseButton == 0 && isMouseOver(mouseX, mouseY)) {
-			setScrollAmount(getScrollAmount() - mouseY + oldY);
-			return true;
-		} else {
-			return false;
-		}
-	}
+                entry.render(
+                        rowIndex,
+                        rowTop,
+                        entryLeft,
+                        rowWidth,
+                        rowHeightInner,
+                        mouseX,
+                        mouseY,
+                        hovered,
+                        delta
+                );
+            }
+        }
+    }
 
-	public boolean mouseScrolled(double d, double e, double f) {
-		this.setScrollAmount(this.getScrollAmount() - f * (double)this.itemHeight / 2.0D);
-		return true;
-	}
+    protected int getRowLeft() {
+        return this.left + this.width / 2 - this.getRowWidth() / 2 + 2;
+    }
 
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		if (this.getFocused() != null && this.getFocused().keyPressed(keyCode, scanCode, modifiers)) {
-			return true;
-		} else if (keyCode == 264) {
-			this.moveSelection(1);
-			return true;
-		} else if (keyCode == 265) {
-			this.moveSelection(-1);
-			return true;
-		} else {
-			return false;
-		}
-	}
+    protected int getRowTop(int rowIndex) {
+        return this.top + TOP_PADDING - (int)this.getScrollAmount() + rowIndex * this.itemHeight + this.headerHeight;
+    }
 
-	protected void moveSelection(int i) {
-		if (!this.children().isEmpty()) {
-			int j = this.children().indexOf(this.getSelected());
-			int k = j + i;
-			if (k < 0)
-				k = 0;
-			else if (k > getItemCount() - 1)
-				k = getItemCount() - 1;
-			E entry = this.children().get(k);
-			this.setSelected(entry);
-			this.ensureVisible(entry);
-		}
+    int getRowBottom(int rowIndex) {
+        return this.getRowTop(rowIndex) + this.itemHeight;
+    }
 
-	}
+    protected boolean isFocused() {
+        return false;
+    }
 
-	public boolean isMouseOver(double d, double e) {
-		return e >= (double)this.top && e <= (double)this.bottom && d >= (double)this.left && d <= (double)this.right;
-	}
+    @SuppressWarnings("SameParameterValue")
+    protected void renderHoleBackground(int topY, int bottomY, int topAlpha, int bottomAlpha) {
+        Tessellator tessellator = Tessellator.instance;
+        this.minecraft.textureManager.bindTexture(
+                this.minecraft.textureManager.loadTexture("/gui/background.png")
+        );
 
-	protected void renderList(int i, int j, int k, int l, float f) {
-		int m = this.getItemCount();
-		Tessellator tessellator = Tessellator.instance;
+        GL11.glColor4f(1f, 1f, 1f, 1f);
 
-		for(int n = 0; n < m; ++n) {
-			int o = this.getRowTop(n);
-			int p = this.getRowBottom(n);
-			if (p >= this.top && o <= this.bottom) {
-				int q = j + n * this.itemHeight + this.headerHeight;
-				int r = this.itemHeight - 4;
-				E entry = this.getEntry(n);
-				int s = this.getRowWidth();
-				int v;
-				if (this.renderSelection && this.isSelectedItem(n)) {
-					v = this.left + this.width / 2 - s / 2;
-					int u = this.left + this.width / 2 + s / 2;
-					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					float g = this.isFocused() ? 1.0F : 0.5F;
-					GL11.glColor4f(g, g, g, 1f);
-					tessellator.startDrawingQuads();
-					tessellator.addVertex(v, q + r + 2, 0.0D);
-					tessellator.addVertex(u, q + r + 2, 0.0D);
-					tessellator.addVertex(u, q - 2, 0.0D);
-					tessellator.addVertex(v, q - 2, 0.0D);
-					tessellator.draw();
-					GL11.glColor4f(0f, 0f, 0f, 1f);
-					tessellator.startDrawingQuads();
-					tessellator.addVertex(v + 1, q + r + 1, 0.0D);
-					tessellator.addVertex(u - 1, q + r + 1, 0.0D);
-					tessellator.addVertex(u - 1, q - 1, 0.0D);
-					tessellator.addVertex(v + 1, q - 1, 0.0D);
-					tessellator.draw();
-					GL11.glEnable(GL11.GL_TEXTURE_2D);
-				}
+        tessellator.startDrawingQuads();
 
-				v = this.getRowLeft();
-				entry.render(n, o, v, s, r, k, l, this.isMouseOver(k, l) && Objects.equals(this.getEntryAtPosition(k, l), entry), f);
-			}
-		}
+        // bottom fade
+        tessellator.setColorRGBA(64, 64, 64, bottomAlpha);
+        tessellator.addVertexWithUV(this.left, bottomY, 0.0D, 0.0F, bottomY / 32.0F);
+        tessellator.addVertexWithUV((double) this.left + this.width, bottomY, 0.0D, this.width / 32.0F, bottomY / 32.0F);
 
-	}
+        // top fade
+        tessellator.setColorRGBA(64, 64, 64, topAlpha);
+        tessellator.addVertexWithUV((double) this.left + this.width, topY, 0.0D, this.width / 32.0F, topY / 32.0F);
+        tessellator.addVertexWithUV(this.left, topY, 0.0D, 0.0F, topY / 32.0F);
 
-	protected int getRowLeft() {
-		return this.left + this.width / 2 - this.getRowWidth() / 2 + 2;
-	}
+        tessellator.draw();
+    }
 
-	protected int getRowTop(int i) {
-		return this.top + 4 - (int)this.getScrollAmount() + i * this.itemHeight + this.headerHeight;
-	}
 
-	private int getRowBottom(int i) {
-		return this.getRowTop(i) + this.itemHeight;
-	}
+    protected E remove(int index) {
+        E entry = this.children.get(index);
+        return this.removeEntry(entry) ? entry : null;
+    }
 
-	protected boolean isFocused() {
-		return false;
-	}
+    protected boolean removeEntry(E entry) {
+        boolean removed = this.children.remove(entry);
+        if (removed && entry == this.getSelected()) {
+            this.setSelected(null);
+        }
+        return removed;
+    }
 
-	protected void renderHoleBackground(int i, int j, int k, int l) {
-		Tessellator tessellator = Tessellator.instance;
-		this.minecraft.textureManager.bindTexture(this.minecraft.textureManager.loadTexture("/gui/background.png"));
-		GL11.glColor4f(1f, 1f, 1f, 1f);
-		float f = 32.0F;
-		tessellator.startDrawingQuads();
-		tessellator.setColorRGBA(64, 64, 64, l);
-		tessellator.addVertexWithUV(this.left, j, 0.0D, 0.0F, (float)j / 32.0F);
-		tessellator.addVertexWithUV(this.left + this.width, j, 0.0D, (float)this.width / 32.0F, (float)j / 32.0F);
-		tessellator.setColorRGBA(64, 64, 64, k);
-		tessellator.addVertexWithUV(this.left + this.width, i, 0.0D, (float)this.width / 32.0F, (float)i / 32.0F);
-		tessellator.addVertexWithUV(this.left, i, 0.0D, 0.0F, (float)i / 32.0F);
-		tessellator.draw();
-	}
+    @Environment(EnvType.CLIENT)
+    class EntryList extends AbstractList<E> {
+        private final List<E> entries;
 
-	protected E remove(int i) {
-		E entry = this.children.get(i);
-		return this.removeEntry(this.children.get(i)) ? entry : null;
-	}
+        private EntryList() {
+            this.entries = Lists.newArrayList();
+        }
+        @Override
+        public E get(int index) {
+            return this.entries.get(index);
+        }
+        @Override
+        public int size() {
+            return this.entries.size();
+        }
 
-	protected boolean removeEntry(E entry) {
-		boolean bl = this.children.remove(entry);
-		if (bl && entry == this.getSelected()) {
-			this.setSelected(null);
-		}
+        @Override
+        public E set(int index, E entry) {
+            return this.entries.set(index, entry);
+        }
 
-		return bl;
-	}
+        @Override
+        public void add(int index, E entry) {
+            this.entries.add(index, entry);
+        }
 
-	@Environment(EnvType.CLIENT)
-	class Entries extends AbstractList<E> {
-		private final List<E> entries;
+        @Override
+        public E remove(int index) {
+            return this.entries.remove(index);
+        }
+    }
 
-		private Entries() {
-			this.entries = Lists.newArrayList();
-		}
+    @SuppressWarnings("unused")
+    @Environment(EnvType.CLIENT)
+    public abstract static class Entry<E extends EntryListWidget.Entry<E>> extends Screen {
+        protected Entry() {}
 
-		public E get(int i) {
-			return this.entries.get(i);
-		}
+        public abstract void render(
+                int index,
+                int rowTop,
+                int rowLeft,
+                int rowWidth,
+                int rowHeight,
+                int mouseX,
+                int mouseY,
+                boolean hovered,
+                float delta
+        );
 
-		public int size() {
-			return this.entries.size();
-		}
+        @SuppressWarnings("unused")
+        public void mouseMoved(double mouseX, double mouseY) {}
 
-		public E set(int i, E entry) {
-			E entry2 = this.entries.set(i, entry);
-			entry.list = EntryListWidget.this;
-			return entry2;
-		}
+        @Override
+        public void mouseClicked(int mouseX, int mouseY, int button) {}
 
-		public void add(int i, E entry) {
-			this.entries.add(i, entry);
-			entry.list = EntryListWidget.this;
-		}
+        @SuppressWarnings({"UnusedReturnValue", "unused"})
+        public boolean mouseReleased(double mouseX, double mouseY, int button) {
+            return false;
+        }
 
-		public E remove(int i) {
-			return this.entries.remove(i);
-		}
-	}
+        @SuppressWarnings({"java:S1172", "unused"})
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollAmount) {
+            return false;
+        }
 
-	@Environment(EnvType.CLIENT)
-	public abstract static class Entry<E extends EntryListWidget.Entry<E>> extends Screen {
-		@Deprecated
-		EntryListWidget<E> list;
+        @SuppressWarnings("java:S1172")
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            return false;
+        }
 
-		public Entry() {
-		}
+        @SuppressWarnings({"java:S1172", "unused"})
+        public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+            return false;
+        }
 
-		public abstract void render(int i, int j, int k, int l, int m, int n, int o, boolean bl, float f);
+        @SuppressWarnings({"java:S1172", "unused"})
+        public boolean charTyped(char character, int keyCode) {
+            return false;
+        }
 
-		public boolean isMouseOver(double d, double e) {
-			return Objects.equals(this.list.getEntryAtPosition(d, e), this);
-		}
-
-		public void mouseMoved(double d, double e) {
-		}
-
-		public void mouseClicked(int d, int e, int f) {
-		}
-
-		public boolean mouseReleased(double d, double e, int i) {
-			return false;
-		}
-
-		public boolean mouseScrolled(double d, double e, double f) {
-			return false;
-		}
-
-		public boolean keyPressed(int i, int j, int k) {
-			return false;
-		}
-
-		public boolean keyReleased(int i, int j, int k) {
-			return false;
-		}
-
-		public boolean charTyped(char c, int i) {
-			return false;
-		}
-
-		public boolean changeFocus(boolean bl) {
-			return false;
-		}
-
-	}
+        @SuppressWarnings({"java:S1172", "unused"})
+        public boolean changeFocus(boolean moveForward) {
+            return false;
+        }
+    }
 }
