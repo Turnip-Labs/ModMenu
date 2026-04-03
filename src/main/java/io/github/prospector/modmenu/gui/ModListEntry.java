@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.gui;
 
+
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.util.BadgeRenderer;
 import io.github.prospector.modmenu.util.HardcodedUtil;
@@ -8,8 +9,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.render.Font;
-import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.font.FontRenderer;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.renderer.State;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,171 +23,137 @@ import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class ModListEntry extends AlwaysSelectedEntryListWidget.Entry<ModListEntry> {
-    public static final String UNKNOWN_ICON = "/gui/unknown_pack.png";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModMenu.MOD_ID);
+	public static final String UNKNOWN_ICON = "/gui/unknown_pack.png";
+	private static final Logger LOGGER = LoggerFactory.getLogger(ModMenu.MOD_ID);
 
-    protected final Minecraft client;
-    protected final ModContainer container;
-    protected final ModMetadata metadata;
-    protected final ModListWidget list;
-    protected Integer iconLocation;
+	protected final Minecraft client;
+	protected final ModContainer container;
+	protected final ModMetadata metadata;
+	protected final ModListWidget list;
+	protected Integer iconLocation;
 
-    public ModListEntry(Minecraft client, ModContainer container, ModListWidget list) {
-        this.container = container;
-        this.list = list;
-        this.metadata = container.getMetadata();
-        this.client = client;
-    }
+	public ModListEntry(Minecraft mc, ModContainer container, ModListWidget list) {
+		this.container = container;
+		this.list = list;
+		this.metadata = container.getMetadata();
+		this.client = mc;
+	}
 
-    @Override
-    public void render(int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
-        int offsetX = getXOffset();
-        rowLeft += offsetX;
-        rowWidth -= offsetX;
+	@Override
+	public void render(int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
+		x += getXOffset();
+		rowWidth -= getXOffset();
 
-        GL11.glColor4f(1f, 1f, 1f, 1f);
-        bindIconTexture();
-        drawIconQuad(rowLeft, rowTop);
+		GLRenderer.pushFrame();
 
-        String displayName = getDisplayName();
-        displayName = HardcodedUtil.formatFabricModuleName(displayName);
+		GLRenderer.setColor4f(1, 1, 1, 1); // We LOVE random color calls
+		this.bindIconTexture();
+        internalRender(y, x);
+		String name = metadata.getName();
+		if (name.equals("Minecraft")){  // BAD CODE
+			name = "Better than Adventure";
+		}
+        name = HardcodedUtil.formatFabricModuleName(name);
+		String trimmedName = name;
+		int maxNameWidth = rowWidth - 32 - 3;
+		FontRenderer font = this.fontRenderer;
+        trimmedName = ModListScreen.getString(fontRenderer, name, trimmedName, maxNameWidth);
+        this.drawStringNoShadow(font, trimmedName, x + 32 + 3, y + 1, 0xFFFFFF);
+		new BadgeRenderer(client, x + 32 + 3 + font.stringWidth(name) + 2, y, x + rowWidth, container, list.getParent()).draw(mouseX, mouseY);
+		String description = metadata.getDescription();
+		if (description.isEmpty() && HardcodedUtil.getHardcodedDescriptions().containsKey(metadata.getId())) {
+			description = HardcodedUtil.getHardcodedDescription(metadata.getId());
+		}
+		RenderUtils.INSTANCE.drawWrappedString(this, description, (x + 32 + 3 + 4), (y + 9 + 2), rowWidth - 32 - 7, 2, 0x808080);
 
-        Font font = this.client.font;
-        int maxNameWidth = rowWidth - 32 - 3;
-        String trimmedName = ModListScreen.getString(font, displayName, maxNameWidth);
+		GLRenderer.popFrame();
+	}
 
-        int nameX = rowLeft + 32 + 3;
-        int nameY = rowTop + 1;
-        font.drawString(trimmedName, nameX, nameY, 0xFFFFFF);
+    static void internalRender(int y, int x) {
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.INTERFACE);
+		GLRenderer.enableState(State.BLEND);
 
-        int badgeStartX = nameX + font.getStringWidth(trimmedName) + 2;
-        new BadgeRenderer(client, badgeStartX, rowTop, rowLeft + rowWidth, container, list.getParent())
-                .draw(mouseX, mouseY);
+		TessellatorGeneral t = GLRenderer.getTessellator();
+		t.startDrawingQuads();
+		t.addVertexWithUV(x, y, 0, 0, 0);
+		t.addVertexWithUV(x, y + 32, 0, 0, 1);
+		t.addVertexWithUV(x + 32, y + 32, 0, 1, 1);
+		t.addVertexWithUV(x + 32, y, 0, 1, 0);
+		t.draw();
 
-        String description = metadata.getDescription();
-        if (description.isEmpty() && HardcodedUtil.getHardcodedDescriptions().containsKey(metadata.getId())) {
-            description = HardcodedUtil.getHardcodedDescription(metadata.getId());
-        }
-
-        int descX = nameX + 4;
-        int descY = rowTop + 9 + 2;
-        int descWidth = rowWidth - 32 - 7;
-        RenderUtils.INSTANCE.drawWrappedString(font, description, descX, descY, descWidth, 2, 0x808080);
-    }
-
-    private String getDisplayName() {
-        String name = metadata.getName();
-        // BTA-specific hardcoded rename
-        if ("Minecraft".equals(name)) {
-            return "Better than Adventure";
-        }
-        return name;
-    }
-
-    private static void drawIconQuad(int x, int y) {
-        GL11.glEnable(GL11.GL_BLEND);
-        Tessellator tess = Tessellator.instance;
-        tess.startDrawingQuads();
-        tess.addVertexWithUV(x, y, 0, 0, 0);
-        tess.addVertexWithUV(x, y + 32.0, 0, 0, 1);
-        tess.addVertexWithUV(x + 32.0, y + 32.0, 0, 1, 1);
-        tess.addVertexWithUV(x + 32.0, y, 0, 1, 0);
-        tess.draw();
-        GL11.glDisable(GL11.GL_BLEND);
+		GLRenderer.popFrame();
     }
 
     private BufferedImage createIcon() {
-        try {
-            Path iconPath = resolveIconPath();
-            if (iconPath == null) {
-                return null;
-            }
-
-            BufferedImage cached = this.list.getCachedModIcon(iconPath);
-            if (cached != null) {
-                return cached;
-            }
-
-            try (InputStream inputStream = Files.newInputStream(iconPath)) {
-                BufferedImage image = ImageIO.read(inputStream);
-                if (image == null) {
-                    return null;
+		try {
+			Path path = container.getPath(metadata.getIconPath(0).orElse("assets/" + metadata.getId() + "/icon.png"));
+			BufferedImage cached = this.list.getCachedModIcon(path);
+			if (cached != null) {
+				return cached;
+			}
+			if (!Files.exists(path)) {
+				ModContainer modMenu = FabricLoader.getInstance().getModContainer(ModMenu.MOD_ID).orElseThrow(IllegalAccessError::new);
+				if (HardcodedUtil.getFabricMods().contains(metadata.getId())) {
+					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/fabric_icon.png");
+				} else if (metadata.getId().equals("minecraft")) {
+					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/mc_icon.png");
+				} else if (metadata.getId().equals("java")) {
+					path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/java_icon.png");
+				} else {
+                    path = modMenu.getPath("assets/" + ModMenu.MOD_ID + "/grey_fabric_icon.png");
                 }
-                if (image.getHeight() != image.getWidth()) {
-                    throw new IllegalStateException("Must be square icon");
-                }
-                this.list.cacheModIcon(iconPath, image);
-                return image;
-            }
-        } catch (Exception e) {
-            LOGGER.error("Invalid icon for mod {}", this.metadata.getName(), e);
-            return null;
-        }
-    }
+			}
+			cached = this.list.getCachedModIcon(path);
+			if (cached != null) {
+				return cached;
+			}
+			try (InputStream inputStream = Files.newInputStream(path)) {
+				BufferedImage image = ImageIO.read(Objects.requireNonNull(inputStream));
+				if (image.getHeight() != image.getWidth())
+					throw new IllegalStateException("Must be square icon");
+				this.list.cacheModIcon(path, image);
+				return image;
+			}
 
-    @SuppressWarnings("java:S1075")
-    private Path resolveIconPath() {
-        // Try mod-provided icon first
-        Path path = container.findPath(
-                metadata.getIconPath(0).orElse("assets/" + metadata.getId() + "/icon.png")
-        ).orElse(null);
+		} catch (Throwable t) {
+			LOGGER.error("Invalid icon for mod {}", this.container.getMetadata().getName(), t);
+			return null;
+		}
+	}
 
-        if (path != null && Files.exists(path)) {
-            return path;
-        }
+	@Override
+	public void mouseClicked(int v, int v1, int i) {
+		list.select(this);
+	}
 
-        // Fallback icons from Mod Menu
-        ModContainer modMenu = FabricLoader.getInstance()
-                .getModContainer(ModMenu.MOD_ID)
-                .orElseThrow(IllegalAccessError::new);
+	public ModMetadata getMetadata() {
+		return metadata;
+	}
 
-        String basePath = "assets/" + ModMenu.MOD_ID + "/";
-        String fallback;
+	public void bindIconTexture() {
+		if (this.iconLocation == null) {
+			BufferedImage icon = this.createIcon();
+			if (icon != null) {
+				this.iconLocation = this.client.textureManager.loadBufferedTexture(icon).id();
+			} else {
+				this.iconLocation = this.client.textureManager.loadTexture(UNKNOWN_ICON).id();
+			}
+		}
+		this.client.textureManager.bindTexture(this.iconLocation);
+	}
 
-        if (HardcodedUtil.getFabricMods().contains(metadata.getId())) {
-            fallback = "fabric_icon.png";
-        } else if ("minecraft".equals(metadata.getId())) {
-            fallback = "mc_icon.png";
-        } else if ("java".equals(metadata.getId())) {
-            fallback = "java_icon.png";
-        } else {
-            fallback = "grey_fabric_icon.png";
-        }
+	public void deleteTexture() {
+		if (iconLocation != null) {
+			this.client.textureManager.idToTextureMap.remove(iconLocation);
+			GL11.glDeleteTextures(iconLocation);
+		}
+	}
 
-        return modMenu.findPath(basePath + fallback).orElse(null);
-    }
-
-    @Override
-    public void mouseClicked(int mouseX, int mouseY, int button) {
-        list.select(this);
-    }
-
-    public ModMetadata getMetadata() {
-        return metadata;
-    }
-
-    public void bindIconTexture() {
-        if (this.iconLocation == null) {
-            BufferedImage icon = this.createIcon();
-            if (icon != null) {
-                this.iconLocation = this.client.textureManager.loadBufferedTexture(icon).id();
-            } else {
-                this.iconLocation = this.client.textureManager.loadTexture(UNKNOWN_ICON).id();
-            }
-        }
-        this.client.textureManager.bindTexture(this.iconLocation);
-    }
-
-    public void deleteTexture() {
-        if (iconLocation != null) {
-            this.client.textureManager.idToTextureMap.remove(iconLocation);
-            GL11.glDeleteTextures(iconLocation);
-        }
-    }
-
-    public int getXOffset() {
-        return 0;
-    }
+	public int getXOffset() {
+		return 0;
+	}
 }

@@ -1,5 +1,6 @@
 package io.github.prospector.modmenu.gui;
 
+
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.config.ModMenuConfigManager;
 import io.github.prospector.modmenu.gui.entries.ChildEntry;
@@ -11,318 +12,310 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
 import net.minecraft.client.render.tessellator.Tessellator;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.util.helper.MathHelper;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
 import java.util.*;
 
 public class ModListWidget extends AlwaysSelectedEntryListWidget<ModListEntry> implements AutoCloseable {
-    public static final boolean DEBUG = Boolean.getBoolean("modmenu.debug");
+	private static final Logger LOGGER = LoggerFactory.getLogger(ModMenu.MOD_ID);
+	public static final boolean DEBUG = Boolean.getBoolean("modmenu.debug");
 
-    private final Map<Path, BufferedImage> modIconsCache = new HashMap<>();
-    private final ModListScreen parent;
+	private final Map<Path, BufferedImage> modIconsCache = new HashMap<>();
+	private final ModListScreen parent;
+	private List<ModContainer> modContainerList = null;
+	private Set<ModContainer> addedMods = new HashSet<>();
+	private String selectedModId = null;
+	private boolean scrolling;
+	private boolean isFocused;
 
-    private List<ModContainer> modContainerList = null;
-    private final Set<ModContainer> addedMods = new HashSet<>();
-    private String selectedModId = null;
+	public ModListWidget(Minecraft client, int width, int height, int y1, int y2, int entryHeight, String searchTerm, ModListWidget list, ModListScreen parent) {
+		super(client, width, height, y1, y2, entryHeight);
+		this.parent = parent;
+		if (list != null) {
+			this.modContainerList = list.modContainerList;
+		}
+		this.filter(searchTerm, false);
+		setScrollAmount(parent.getScrollPercent() * Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4)));
+	}
 
-    public ModListWidget(Minecraft client, int width, int height, int top, int bottom, int entryHeight, String searchTerm, ModListWidget previousList, ModListScreen parent) {
-        super(client, width, height, top, bottom, entryHeight);
-        this.parent = parent;
+	@Override
+	public void setScrollAmount(double amount) {
+		super.setScrollAmount(amount);
+		int denominator = Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4));
+		if (denominator <= 0) {
+			parent.updateScrollPercent(0);
+		} else {
+			parent.updateScrollPercent(getScrollAmount() / Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4)));
+		}
+	}
 
-        if (previousList != null) {
-            this.modContainerList = previousList.modContainerList;
-        }
+	@Override
+	protected boolean isFocused() {
+		return isFocused;
+	}
 
-        this.filter(searchTerm, false);
+	public void select(ModListEntry entry) {
+		this.setSelected(entry);
+	}
 
-        int maxScrollRange = Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4));
-        setScrollAmount(parent.getScrollPercent() * maxScrollRange);
-    }
+	@Override
+	public void setSelected(ModListEntry entry) {
+		super.setSelected(entry);
+		selectedModId = entry.getMetadata().getId();
+		parent.updateSelectedEntry(getSelected());
+	}
 
-    @Override
-    public void setScrollAmount(double amount) {
-        super.setScrollAmount(amount);
-        int maxScrollRange = Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4));
-        if (maxScrollRange == 0) {
-            parent.updateScrollPercent(0);
-        } else {
-            parent.updateScrollPercent(getScrollAmount() / maxScrollRange);
-        }
-    }
+	@Override
+	protected boolean isSelectedItem(int index) {
+		ModListEntry selected = getSelected();
+		return selected != null && selected.getMetadata().getId().equals(getEntry(index).getMetadata().getId());
+	}
 
-    public void select(ModListEntry entry) {
-        this.setSelected(entry);
-    }
+	@Override
+	public int addEntry(ModListEntry entry) {
+		if (addedMods.contains(entry.container)) {
+			return 0;
+		}
+		addedMods.add(entry.container);
+		int i = super.addEntry(entry);
+		if (entry.getMetadata().getId().equals(selectedModId)) {
+			setSelected(entry);
+		}
+		return i;
+	}
 
-    @Override
-    public void setSelected(ModListEntry entry) {
-        super.setSelected(entry);
-        selectedModId = entry.getMetadata().getId();
-        parent.updateSelectedEntry(getSelected());
-    }
+	@Override
+	protected boolean removeEntry(ModListEntry entry) {
+		addedMods.remove(entry.container);
+		return super.removeEntry(entry);
+	}
 
-    @Override
-    protected boolean isSelectedItem(int index) {
-        ModListEntry selected = getSelected();
-        if (selected == null) {
-            return false;
-        }
-        return selected.getMetadata().getId().equals(getEntry(index).getMetadata().getId());
-    }
+	@Override
+	protected ModListEntry remove(int index) {
+		addedMods.remove(getEntry(index).container);
+		return super.remove(index);
+	}
 
-    @Override
-    public int addEntry(ModListEntry entry) {
-        if (addedMods.contains(entry.container)) {
-            return 0;
-        }
-        addedMods.add(entry.container);
-        int idx = super.addEntry(entry);
-        if (entry.getMetadata().getId().equals(selectedModId)) {
-            setSelected(entry);
-        }
-        return idx;
-    }
+	public void reloadFilters() {
+		filter(parent.getSearchInput(), true, false);
+	}
 
-    @Override
-    protected boolean removeEntry(ModListEntry entry) {
-        addedMods.remove(entry.container);
-        return super.removeEntry(entry);
-    }
 
-    @Override
-    protected ModListEntry remove(int index) {
-        addedMods.remove(getEntry(index).container);
-        return super.remove(index);
-    }
+	public void filter(String searchTerm, boolean refresh) {
+		filter(searchTerm, refresh, true);
+	}
 
-    public void reloadFilters() {
-        filter(parent.getSearchInput(), true);
-    }
+	private void filter(String searchTerm, boolean refresh, boolean search) {
+		this.clearEntries();
+		addedMods.clear();
+		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
 
-    public void filter(String searchTerm, boolean refresh) {
-        this.clearEntries();
-        addedMods.clear();
+		if (DEBUG) {
+			mods = new ArrayList<>(mods);
+			mods.addAll(TestModContainer.getTestModContainers());
+		}
 
-        Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
+		if (this.modContainerList == null || refresh) {
+			this.modContainerList = new ArrayList<>();
+			modContainerList.addAll(mods);
+			this.modContainerList.sort(ModMenuConfigManager.getConfig().getSorting().getComparator());
+		}
 
-        if (DEBUG) {
-            mods = new ArrayList<>(mods);
-            mods.addAll(TestModContainer.getTestModContainers());
-        }
+		boolean validSearch = ModListSearch.validSearchQuery(searchTerm);
+		List<ModContainer> matched = ModListSearch.search(parent, searchTerm, modContainerList);
 
-        if (this.modContainerList == null || refresh) {
-            this.modContainerList = new ArrayList<>();
-            this.modContainerList.addAll(mods);
-            this.modContainerList.sort(ModMenuConfigManager.getConfig().getSorting().getComparator());
-        }
+		for (ModContainer container : matched) {
+			ModMetadata metadata = container.getMetadata();
+			String modId = metadata.getId();
+			boolean library = ModMenu.LIBRARY_MODS.contains(modId);
 
-        List<ModContainer> matched = ModListSearch.search(parent, searchTerm, modContainerList);
+			//Hide parent lib mods when the config is set to hide
+			if (library && !ModMenuConfigManager.getConfig().showLibraries()) {
+				continue;
+			}
 
-        for (ModContainer container : matched) {
-            ModMetadata metadata = container.getMetadata();
-            String modId = metadata.getId();
-            boolean library = ModMenu.LIBRARY_MODS.contains(modId);
+			if (!ModMenu.PARENT_MAP.values().contains(container)) {
+				if (ModMenu.PARENT_MAP.keySet().contains(container)) {
+					//Add parent mods when not searching
+					List<ModContainer> children = ModMenu.PARENT_MAP.get(container);
+					children.sort(ModMenuConfigManager.getConfig().getSorting().getComparator());
+					ParentEntry parent = new ParentEntry(minecraft, container, children, this);
+					this.addEntry(parent);
+					//Add children if they are meant to be shown
+					if (this.parent.showModChildren.contains(modId)) {
+						List<ModContainer> validChildren = ModListSearch.search(this.parent, searchTerm, children);
+						for (ModContainer child : validChildren) {
+							this.addEntry(new ChildEntry(minecraft, child, parent, this, validChildren.indexOf(child) == validChildren.size() - 1));
+						}
+					}
+				} else {
+					//A mod with no children
+					this.addEntry(new IndependentEntry(minecraft, container, this));
+				}
+			}
+		}
 
-            if (library && !ModMenuConfigManager.getConfig().showLibraries()) {
-                continue;
-            }
+		if (parent.getSelectedEntry() != null && !children().isEmpty() || this.getSelected() != null && getSelected().getMetadata() != parent.getSelectedEntry().getMetadata()) {
+			for (ModListEntry entry : children()) {
+				if (entry.getMetadata().equals(parent.getSelectedEntry().getMetadata())) {
+					setSelected(entry);
+				}
+			}
+		} else {
+			if (getSelected() == null && !children().isEmpty() && getEntry(0) != null) {
+				setSelected(getEntry(0));
+			}
+		}
 
-            if (!ModMenu.PARENT_MAP.values().contains(container)) {
-                if (ModMenu.PARENT_MAP.keySet().contains(container)) {
-                    List<ModContainer> children = ModMenu.PARENT_MAP.get(container);
-                    children.sort(ModMenuConfigManager.getConfig().getSorting().getComparator());
-                    ParentEntry parentEntry = new ParentEntry(minecraft, container, children, this);
-                    this.addEntry(parentEntry);
+		if (getScrollAmount() > Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4))) {
+			setScrollAmount(Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4)));
+		}
+	}
+	@Override
+	protected void renderList(int x, int y, int mouseX, int mouseY, float delta) {
+		int itemCount = this.getItemCount();
 
-                    if (this.parent.getShowModChildren().contains(modId)) {
-                        List<ModContainer> validChildren = ModListSearch.search(this.parent, searchTerm, children);
-                        for (ModContainer child : validChildren) {
-                            boolean lastChild = validChildren.indexOf(child) == validChildren.size() - 1;
-                            this.addEntry(new ChildEntry(minecraft, child, this, lastChild));
-                        }
+		GLRenderer.pushFrame();
+		GLRenderer.setShader(Shaders.COLOR);
+		GLRenderer.setColor4f(0, 0, 0, 1);
+
+		TessellatorGeneral t = GLRenderer.getTessellator();
+
+		for (int index = 0; index < itemCount; ++index) {
+			int entryTop = this.getRowTop(index) + 2;
+			int entryBottom = this.getRowTop(index) + this.itemHeight;
+			if (entryBottom >= this.top && entryTop <= this.bottom) {
+				int entryHeight = this.itemHeight - 4;
+				ModListEntry entry = this.getEntry(index);
+				int rowWidth = this.getRowWidth();
+				int entryLeft;
+				if (this.renderSelection && this.isSelectedItem(index)) {
+					entryLeft = getRowLeft() - 2 + entry.getXOffset();
+					int selectionRight = x + rowWidth + 2;
+					float float_2 = this.isFocused() ? 1.0F : 0.5F;
+
+					GLRenderer.setColor4f(float_2, float_2, float_2, 1);
+					t.startDrawingQuads();
+					t.addVertex(entryLeft, entryTop + entryHeight + 2, 0.0D);
+					t.addVertex(selectionRight, entryTop + entryHeight + 2, 0.0D);
+					t.addVertex(selectionRight, entryTop - 2, 0.0D);
+					t.addVertex(entryLeft, entryTop - 2, 0.0D);
+					t.draw();
+
+					GLRenderer.setColor4f(0, 0, 0, 1);
+					t.startDrawingQuads();
+					t.addVertex(entryLeft + 1, entryTop + entryHeight + 1, 0.0D);
+					t.addVertex(selectionRight - 1, entryTop + entryHeight + 1, 0.0D);
+					t.addVertex(selectionRight - 1, entryTop - 1, 0.0D);
+					t.addVertex(entryLeft + 1, entryTop - 1, 0.0D);
+					t.draw();
+				}
+
+				entryLeft = this.getRowLeft();
+				entry.render(index, entryTop, entryLeft, rowWidth, entryHeight, mouseX, mouseY, this.isMouseOver((double) mouseX, (double) mouseY) && Objects.equals(this.getEntryAtPos((double) mouseX, (double) mouseY), entry), delta);
+			}
+		}
+
+		GLRenderer.popFrame();
+
+	}
+
+	@Override
+	protected void updateScrollingState(double double_1, double double_2, int int_1) {
+		super.updateScrollingState(double_1, double_2, int_1);
+		this.scrolling = int_1 == 0 && double_1 >= (double) this.getScrollbarPosition() && double_1 < (double) (this.getScrollbarPosition() + 6);
+	}
+
+	@Override
+	public void mouseClicked(int double_1, int double_2, int int_1) {
+		this.updateScrollingState(double_1, double_2, int_1);
+		if (this.isMouseOver(double_1, double_2))  {
+			ModListEntry entry = this.getEntryAtPos(double_1, double_2);
+			if (entry != null) {
+                if (entry.list.getFocused() != null) {
+                    if (!entry.list.getFocused().equals(entry)) {
+                        this.setFocused(entry);
+                        this.setSelected(entry);
+                        this.setDragging(true);
+                        super.mouseClicked(double_1, double_2, int_1);
                     }
                 } else {
-                    this.addEntry(new IndependentEntry(minecraft, container, this));
+                    this.setFocused(entry);
+                    this.setSelected(entry);
+                    this.setDragging(true);
+                    super.mouseClicked(double_1, double_2, int_1);
                 }
-            }
-        }
-        ModListEntry theSelected = this.getSelected();
-        if ((parent.getSelectedEntry() != null && !children().isEmpty())
-                || (theSelected != null && theSelected.getMetadata() != parent.getSelectedEntry().getMetadata())) {
-            for (ModListEntry entry : children()) {
-                if (entry.getMetadata().equals(parent.getSelectedEntry().getMetadata())) {
-                    setSelected(entry);
-                }
-            }
-        } else if (getSelected() == null && !children().isEmpty() && getEntry(0) != null) {
-            setSelected(getEntry(0));
-        }
+			} else if (int_1 == 0) {
+				this.clickedHeader((int) (double_1 - (double) (this.left + this.width / 2 - this.getRowWidth() / 2)), (int) (double_2 - (double) this.top) + (int) this.getScrollAmount() - 4);
+			}
+		}
+	}
 
-        int maxScrollRange = Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4));
-        if (getScrollAmount() > maxScrollRange) {
-            setScrollAmount(maxScrollRange);
-        }
-    }
+	public final ModListEntry getEntryAtPos(double x, double y) {
+		int int_5 = MathHelper.floor(y - (double) this.top) - this.headerHeight + (int) this.getScrollAmount() - 4; // convertToBlockCoord
+		int index = int_5 / this.itemHeight;
+		return x < (double) this.getScrollbarPosition() && x >= (double) getRowLeft() && x <= (double) (getRowLeft() + getRowWidth()) && index >= 0 && int_5 >= 0 && index < this.getItemCount() ? this.children().get(index) : null;
+	}
 
-    @Override
-    protected void renderList(int rowLeft, int baseRowTop, int mouseX, int mouseY, float delta) {
-        int itemCount = this.getItemCount();
-        Tessellator tessellator = Tessellator.instance;
+	@Override
+	protected int getScrollbarPosition() {
+		return this.width - 6;
+	}
 
-        for (int index = 0; index < itemCount; ++index) {
-            int rowTop = this.getRowTop(index);
-            int rowBottom = this.getRowBottom(index);
+	@Override
+	public int getRowWidth() {
+		return this.width - (Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4)) > 0 ? 18 : 12);
+	}
 
-            if (rowBottom >= this.top && rowTop <= this.bottom) {
-                ModListEntry entry = this.getEntry(index);
-                int entryTop = rowTop + 2;
-                int rowHeightInner = this.itemHeight - 4;
-                int rowWidth = this.getRowWidth();
+	@Override
+	protected int getRowLeft() {
+		return left + 6;
+	}
 
-                if (this.renderSelection && this.isSelectedItem(index)) {
-                    int selectionLeft = this.getRowLeft() - 2 + entry.getXOffset();
-                    int selectionRight = rowLeft + rowWidth + 2;
+	public int getWidth() {
+		return width;
+	}
 
-                    GL11.glDisable(GL11.GL_TEXTURE_2D);
-                    float brightness = this.isFocused() ? 1.0F : 0.5F;
-                    GL11.glColor4f(brightness, brightness, brightness, 1f);
+	public int getTop() {
+		return this.top;
+	}
 
-                    tessellator.startDrawingQuads();
-                    tessellator.addVertex(selectionLeft, entryTop + rowHeightInner + 2.0, 0.0D);
-                    tessellator.addVertex(selectionRight, entryTop + rowHeightInner + 2.0, 0.0D);
-                    tessellator.addVertex(selectionRight, entryTop - 2.0, 0.0D);
-                    tessellator.addVertex(selectionLeft, entryTop - 2.0, 0.0D);
-                    tessellator.draw();
+	public ModListScreen getParent() {
+		return parent;
+	}
 
-                    GL11.glColor4f(0f, 0f, 0f, 1f);
-                    tessellator.startDrawingQuads();
-                    tessellator.addVertex(selectionLeft + 1.0, entryTop + rowHeightInner + 1.0, 0.0D);
-                    tessellator.addVertex(selectionRight - 1.0, entryTop + rowHeightInner + 1.0, 0.0D);
-                    tessellator.addVertex(selectionRight - 1.0, entryTop - 1.0, 0.0D);
-                    tessellator.addVertex(selectionLeft + 1.0, entryTop - 1.0, 0.0D);
-                    tessellator.draw();
+	@Override
+	protected int getMaxPosition() {
+		return super.getMaxPosition() + 4;
+	}
 
-                    GL11.glEnable(GL11.GL_TEXTURE_2D);
-                }
+	public int getDisplayedCount() {
+		return children().size();
+	}
 
-                int entryLeft = this.getRowLeft();
-                boolean hovered = this.isMouseOver(mouseX, mouseY)
-                        && Objects.equals(this.getEntryAtPosition(mouseX, mouseY), entry);
+	@Override
+	public void close() {
+		this.children().forEach(ModListEntry::deleteTexture);
+	}
 
-                entry.render(
-                        index,
-                        entryTop,
-                        entryLeft,
-                        rowWidth,
-                        rowHeightInner,
-                        mouseX,
-                        mouseY,
-                        hovered,
-                        delta
-                );
-            }
-        }
-    }
-    @Override
-    public void mouseClicked(int mouseX, int mouseY, int button) {
-        if (!this.isMouseOver(mouseX, mouseY)) {
-            return;
-        }
+	BufferedImage getCachedModIcon(Path path) {
+		return this.modIconsCache.get(path);
+	}
 
-        ModListEntry clickedEntry = this.getEntryAtPosition(mouseX, mouseY);
-        if (clickedEntry != null) {
-            if (this.getFocused() != clickedEntry) {
-                this.setFocused(clickedEntry);
-            }
-            // use setter so ModListWidget.setSelected runs
-            this.setSelected(clickedEntry);
+	void cacheModIcon(Path path, BufferedImage tex) {
+		this.modIconsCache.put(path, tex);
+	}
 
-            // let the entry react (ModListEntry will call list.select(this) etc)
-            clickedEntry.mouseClicked(mouseX, mouseY, button);
-        } else if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            int headerClickX = (int)(mouseX - (this.left + this.width / 2.0 - this.getRowWidth() / 2.0));
-            int headerClickY = (int)(mouseY - (double)this.top) + (int)this.getScrollAmount() - TOP_PADDING;
-            this.onHeaderClicked(headerClickX, headerClickY);
-        }
-    }
-
-    @Override
-    protected ModListEntry getEntryAtPosition(double mouseX, double mouseY) {
-        int yInList = MathHelper.floor(mouseY - this.top) - this.headerHeight + (int) this.getScrollAmount() - 4;
-        int rowIndex = yInList / this.itemHeight;
-
-        int rowLeft = this.getRowLeft();
-        int rowRight = rowLeft + this.getRowWidth();
-
-        if (mouseX >= this.getScrollbarPosition() || mouseX < rowLeft || mouseX > rowRight) {
-            return null;
-        }
-
-        if (yInList < 0 || rowIndex < 0 || rowIndex >= this.getItemCount()) {
-            return null;
-        }
-
-        return this.children().get(rowIndex);
-    }
-
-    @Override
-    protected int getScrollbarPosition() {
-        return this.width - SCROLLBAR_WIDTH;
-    }
-
-    @Override
-    public int getRowWidth() {
-        int scrollRange = Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4));
-        return this.width - (scrollRange > 0 ? 18 : 12);
-    }
-
-    @Override
-    protected int getRowLeft() {
-        return this.left + 6;
-    }
-
-    public int getWidth() {
-        return this.width;
-    }
-
-    @SuppressWarnings("unused")
-    public int getTop() {
-        return this.top;
-    }
-
-    public ModListScreen getParent() {
-        return parent;
-    }
-
-    @Override
-    protected int getMaxPosition() {
-        return super.getMaxPosition() + 4;
-    }
-
-    public int getDisplayedCount() {
-        return children().size();
-    }
-
-    @Override
-    public void close() {
-        this.children().forEach(ModListEntry::deleteTexture);
-    }
-
-    BufferedImage getCachedModIcon(Path path) {
-        return this.modIconsCache.get(path);
-    }
-
-    void cacheModIcon(Path path, BufferedImage texture) {
-        this.modIconsCache.put(path, texture);
-    }
-
-    @SuppressWarnings("unused")
-    public Set<ModContainer> getCurrentModSet() {
-        return addedMods;
-    }
+	public Set<ModContainer> getCurrentModSet() {
+		return addedMods;
+	}
 }
