@@ -18,6 +18,7 @@ import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.client.gui.options.ScreenOptions;
 import net.minecraft.client.gui.options.data.OptionsPages;
+import net.minecraft.core.data.registry.Registries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,9 @@ import java.util.function.Function;
 
 public class ModMenu implements ModInitializer {
 	public static final String MOD_ID = "modmenu";
+	static {
+		Registries.NAMESPACES.register(MOD_ID, MOD_ID);
+	}
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting().create();
 
