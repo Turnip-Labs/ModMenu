@@ -8,7 +8,6 @@ import net.minecraft.client.gui.Screen;
 import net.minecraft.client.render.renderer.GLRenderer;
 import net.minecraft.client.render.renderer.Shaders;
 import net.minecraft.client.render.renderer.State;
-import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.util.helper.MathHelper;
 import org.jetbrains.annotations.Nullable;

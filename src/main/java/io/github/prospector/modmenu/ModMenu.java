@@ -1,8 +1,6 @@
 package io.github.prospector.modmenu;
 
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -40,8 +38,8 @@ public class ModMenu implements ModInitializer {
     public static final Set<String> DEPRECATED_MODS = new HashSet<>();
 	public static final Set<String> PATCHWORK_FORGE_MODS = new HashSet<>();
     public static final Map<String, Map<String, Map.Entry<Integer, Integer>>> CUSTOM_BADGE_MODS = new HashMap<>();
-	public static final LinkedListMultimap<ModContainer, ModContainer> PARENT_MAP = LinkedListMultimap.create();
-	private static ImmutableMap<String, Function<Screen, ? extends Screen>> configScreenFactories = ImmutableMap.of();
+	public static final Map<ModContainer, List<ModContainer>> PARENT_MAP = new HashMap<>();
+	private static Map<String, Function<Screen, ? extends Screen>> configScreenFactories = new HashMap<>();
 
 	public static boolean hasConfigScreenFactory(String modid) {
 		return configScreenFactories.containsKey(modid);
@@ -75,13 +73,12 @@ public class ModMenu implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModMenuConfigManager.initializeConfig();
-		ImmutableMap.Builder<String, Function<Screen, ? extends Screen>> factories = ImmutableMap.builder();
 		FabricLoader.getInstance().getEntrypointContainers("modmenu", ModMenuApi.class).forEach(entrypoint -> {
 			ModMenuApi api = entrypoint.getEntrypoint();
 			ModContainer mod = entrypoint.getProvider();
             try {
                 api.getClass().getDeclaredMethod("getConfigScreenFactory"); // Make sure the method is implemented
-                factories.put(mod.getMetadata().getId(), api.getConfigScreenFactory());
+                configScreenFactories.put(mod.getMetadata().getId(), api.getConfigScreenFactory());
             } catch (NoSuchMethodException ignored) {}
             api.attachCustomBadges((name, outlineColor, fillColor) -> {
                 Map<String, Map.Entry<Integer, Integer>> map = new HashMap<>();
@@ -89,8 +86,7 @@ public class ModMenu implements ModInitializer {
                 CUSTOM_BADGE_MODS.put(mod.getMetadata().getId(), map);
             });
         });
-		factories.put("minecraft", (screenBase -> new ScreenOptions(screenBase, OptionsPages.GENERAL)));
-		configScreenFactories = factories.build();
+		configScreenFactories.put("minecraft", (screenBase -> new ScreenOptions(screenBase, OptionsPages.GENERAL)));
 		Collection<ModContainer> mods = FabricLoader.getInstance().getAllMods();
 		HardcodedUtil.initializeHardcodings();
 		for (ModContainer mod : mods) {
@@ -128,7 +124,10 @@ public class ModMenu implements ModInitializer {
 				String parentId = metadata.getCustomValue("modmenu:parent").getAsString();
 				if (parentId != null) {
 					Optional<ModContainer> parent = FabricLoader.getInstance().getModContainer(parentId);
-					parent.ifPresent(modContainer -> PARENT_MAP.put(modContainer, mod));
+					parent.ifPresent(modContainer -> {
+						final List<ModContainer> list = PARENT_MAP.computeIfAbsent(modContainer, k -> new ArrayList<>());
+						list.add(mod);
+					});
 				}
 			} else {
 				HardcodedUtil.hardcodeModuleMetadata(mod, metadata, id);

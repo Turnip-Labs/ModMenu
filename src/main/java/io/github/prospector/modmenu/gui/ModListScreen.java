@@ -1,7 +1,5 @@
 package io.github.prospector.modmenu.gui;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import io.github.prospector.modmenu.ModMenu;
 import io.github.prospector.modmenu.config.ModMenuConfigManager;
 import io.github.prospector.modmenu.util.BadgeRenderer;
@@ -18,16 +16,12 @@ import net.minecraft.client.render.font.FontRenderer;
 import net.minecraft.client.render.renderer.GLRenderer;
 import net.minecraft.client.render.renderer.Shaders;
 import net.minecraft.client.render.renderer.State;
-import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.Global;
 import net.minecraft.core.lang.I18n;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL41;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -369,7 +363,7 @@ public class ModListScreen extends Screen {
 				RenderUtils.INSTANCE.drawWrappedString(this, i18n.translateKeyAndFormat("modmenu.authorPrefix", authors), x + imageOffset, paneY + 2 + lineSpacing * 2, paneWidth - imageOffset - 4, 1, 0x808080);
 			}
 			if (this.tooltip != null) {
-				this.renderTooltip(Lists.newArrayList(Splitter.on("\n").split(this.tooltip)), mouseX, mouseY);
+				this.renderTooltip(Arrays.asList(tooltip.split("\n")), mouseX, mouseY);
 			}
 
 			GLRenderer.setColor1i(prevColor);

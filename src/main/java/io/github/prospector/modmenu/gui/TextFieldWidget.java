@@ -9,8 +9,6 @@ import net.minecraft.client.gui.text.TextFieldEditor;
 import net.minecraft.client.render.font.FontRenderer;
 import net.minecraft.client.render.renderer.GLRenderer;
 import net.minecraft.client.render.renderer.Shaders;
-import net.minecraft.client.render.shader.Shader;
-import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.enums.EnumOS;
 import org.jetbrains.annotations.Nullable;

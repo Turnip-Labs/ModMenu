@@ -14,10 +14,8 @@ import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.renderer.GLRenderer;
 import net.minecraft.client.render.renderer.Shaders;
-import net.minecraft.client.render.tessellator.Tessellator;
 import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.util.helper.MathHelper;
-import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
