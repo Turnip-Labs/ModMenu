@@ -1,10 +1,13 @@
-import com.smushytaco.lwjgl_gradle.Preset
 plugins {
     alias(libs.plugins.loom)
-    alias(libs.plugins.lwjgl)
     java
     `maven-publish`
 }
+
+val osName: String = System.getProperty("os.name").lowercase().replace(" ", "")
+val lwjglNativeList = arrayOf("macos", "windows", "linux")
+val lwjglNativesName = "natives-${lwjglNativeList.find { it in osName }}"
+
 val modVersion: Provider<String> = providers.gradleProperty("mod_version")
 val modGroup: Provider<String> = providers.gradleProperty("mod_group")
 val modName: Provider<String> = providers.gradleProperty("mod_name")
@@ -22,44 +25,35 @@ repositories {
     maven("https://maven.fabricmc.net/") { name = "Fabric" }
     maven("https://maven.thesignalumproject.net/infrastructure") { name = "SignalumMavenInfrastructure" }
     maven("https://maven.thesignalumproject.net/releases") { name = "SignalumMavenReleases" }
-    ivy("https://github.com/Better-than-Adventure") {
-        patternLayout { artifact("[organisation]/releases/download/[revision]/[module]-bta-[revision].jar") }
-        metadataSources { artifact() }
-    }
-    ivy("https://downloads.betterthanadventure.net/bta-client/${libs.versions.btaChannel.get()}/") {
-        patternLayout { artifact("/v[revision]/client.jar") }
-        metadataSources { artifact() }
-    }
-    ivy("https://downloads.betterthanadventure.net/bta-server/${libs.versions.btaChannel.get()}/") {
-        patternLayout { artifact("/v[revision]/server.jar") }
-        metadataSources { artifact() }
-    }
     ivy("https://piston-data.mojang.com") {
         patternLayout { artifact("v1/[organisation]/[revision]/[module].jar") }
         metadataSources { artifact() }
     }
 }
-lwjgl {
-    version = libs.versions.lwjgl
-    implementation(Preset.MINIMAL_OPENGL)
-}
+
 dependencies {
     minecraft("::${libs.versions.bta.get()}")
 
-    runtimeOnly(libs.clientJar)
+    // Required at compilation & runtime
+    // included in builds as a runtime dependency
     implementation(libs.loader)
-    implementation(libs.legacyLwjgl)
 
-    implementation(libs.slf4jApi)
-    implementation(libs.guava)
-    implementation(libs.log4j.slf4j2.impl)
-    implementation(libs.log4j.core)
-    implementation(libs.log4j.api)
-    implementation(libs.log4j.api12)
-    implementation(libs.gson)
+    // Only required at compilation
+    // provides documentation, can be removed if that isn't needed
+    compileOnly(libs.bundles.btaLwjgl)
+    compileOnly(libs.joml)
+    compileOnly(libs.joml.primitives)
+    compileOnly(libs.slf4jApi)
 
-    implementation(libs.commonsLang3)
-    include(libs.commonsLang3)
+    // Only required for development/launch at runtime, won't be part of any builds
+    runtimeClasspath(libs.clientJar)
+    val lwjglVer = libs.versions.lwjgl.get()
+    localRuntime(platform("org.lwjgl:lwjgl-bom:${lwjglVer}"))
+    localRuntime("org.lwjgl:lwjgl::$lwjglNativesName")
+    localRuntime("org.lwjgl:lwjgl-glfw::$lwjglNativesName")
+    localRuntime("org.lwjgl:lwjgl-openal::$lwjglNativesName")
+    localRuntime("org.lwjgl:lwjgl-opengl::$lwjglNativesName")
+    localRuntime("org.lwjgl:lwjgl-stb::$lwjglNativesName")
 }
 java {
     toolchain {
@@ -120,8 +114,14 @@ tasks {
         filesMatching("**/*.mixins.json") { expand(resourceMap.filterKeys { it == "java" }) }
     }
 }
-// Removes LWJGL2 dependencies
-configurations.configureEach { exclude(group = "org.lwjgl.lwjgl") }
+// Removes all outdated manifest.json dependencies
+configurations.configureEach {
+    exclude(group = "org.lwjgl.lwjgl")
+    exclude(group = "net.java.jutils")
+    exclude(group = "net.java.jinput")
+    exclude(group = "net.sf.jopt-simple")
+    exclude(group = "net.minecraft", module = "launchwrapper")
+}
 
 publishing {
     repositories {
