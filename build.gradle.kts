@@ -1,5 +1,22 @@
+import java.nio.file.Files
+import org.kohsuke.github.GHReleaseBuilder
+import org.kohsuke.github.GitHub
+
+buildscript {
+
+    dependencies {
+        classpath("org.kohsuke:github-api:1.135")
+    }
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+
 plugins {
     alias(libs.plugins.loom)
+    alias(libs.plugins.minotaur)
     java
     `maven-publish`
 }
@@ -141,4 +158,47 @@ publishing {
             from(components["java"])
         }
     }
+}
+
+val modrinthToken: Provider<String> = providers.gradleProperty("modrinthToken")
+val githubToken: Provider<String> = providers.gradleProperty("turnipLabsGithubToken")
+
+if (modrinthToken.isPresent) {
+    modrinth {
+        token = modrinthToken
+        projectId = "mod-menu-bta"
+        versionName = "[BTA! ${libs.versions.bta.get()}] ${modVersion.get()}"
+        versionNumber = modVersion
+        versionType = "release"
+        uploadFile.set(tasks.jar)
+        additionalFiles = listOf(tasks.named("sourcesJar"))
+        gameVersions.add("b1.7.3")
+        loaders.add("bta-babric")
+        changelog = Files.readString(rootProject.projectDir.toPath().resolve("CHANGELOG.md"))
+    }
+}
+
+if(githubToken.isPresent){
+    tasks.register("github") {
+        doLast {
+            val v = providers.gradleProperty("mod_version").get()
+            val github = GitHub.connectUsingOAuth(githubToken.get())
+            val repository = github.getRepository("Turnip-Labs/ModMenu")
+
+            val releaseBuilder = GHReleaseBuilder(repository, v)
+            releaseBuilder.name("[BTA! ${libs.versions.bta.get()}] ${modVersion.get()}")
+            releaseBuilder.body(Files.readString(rootProject.projectDir.toPath().resolve("CHANGELOG.md")))
+            releaseBuilder.commitish("bta/8.0")
+            val release = releaseBuilder.create()
+            release.uploadAsset(
+                project.file(tasks.named("jar").get().outputs.files.singleFile),
+                "application/java-archive"
+            )
+            release.uploadAsset(
+                project.file(tasks.named("sourcesJar").get().outputs.files.singleFile),
+                "application/java-archive"
+            )
+        }
+    }
+
 }

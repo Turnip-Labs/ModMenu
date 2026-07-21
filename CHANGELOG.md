@@ -1,0 +1,1 @@
+- Fixed a pretty awful crash when selecting text.

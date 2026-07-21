@@ -3,6 +3,8 @@
 # Plugins
 # Check this on https://github.com/FabricMC/fabric-loom/releases/latest/
 loom = "1.15-SNAPSHOT"
+# Check this on https://plugins.gradle.org/plugin/com.modrinth.minotaur/
+minotaur = "2.9.0"
 ##########################################################################
 # Java Configuration
 # The Java version the JDK will be for compiling and running code.
@@ -49,3 +51,4 @@ btaLwjgl = [ "lwjgl", "lwjgl-glfw", "lwjgl-openal", "lwjgl-opengl", "lwjgl-stb",
 
 [plugins]
 loom = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
+minotaur = { id = "com.modrinth.minotaur", version.ref = "minotaur" }
