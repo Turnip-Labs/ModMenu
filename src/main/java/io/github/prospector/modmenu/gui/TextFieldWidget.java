@@ -531,8 +531,8 @@ public class TextFieldWidget extends Screen implements ITextField {
 		GL41.glLogicOp(GL41.GL_OR_REVERSE);
 
 		TessellatorGeneral t = GLRenderer.getTessellator();
-		t.setColor4f(0, 0, 1, 1);
 		t.startDrawingQuads();
+		t.setColor4f(0, 0, 1, 1);
 		t.addVertex(startX, endY, 0.0D);
 		t.addVertex(endX, endY, 0.0D);
 		t.addVertex(endX, startY, 0.0D);
